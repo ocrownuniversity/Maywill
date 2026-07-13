@@ -1995,7 +1995,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       </div>
       <div class="contact-card">
         <i class="fas fa-envelope"></i>
-        <div><h4>Email</h4><p>Send us an email<br><a href="mailto:info@maywillglobalventures.com">info@maywillglobalventures.com</a></p></div>
+        <div><h4>Email</h4><p>Send us an email<br><a href="mailto:maywillglobalventuresltd@gmail.com">maywillglobalventuresltd@gmail.com</a></p></div>
       </div>
       <div class="contact-card">
         <i class="fas fa-clock"></i>
@@ -2208,7 +2208,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       <ul>
         <li>You may request access to, correction of, or deletion of your personal data at any time.</li>
         <li>You may opt out of marketing communications.</li>
-        <li>Contact us at info@maywillglobalventures.com to exercise your rights.</li>
+        <li>Contact us at maywillglobalventuresltd@gmail.com to exercise your rights.</li>
       </ul>
     </div>
     <div class="fp-section">
@@ -2347,7 +2347,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       <h4>Contact</h4>
       <ul class="footer-contact">
         <li><i class="fab fa-whatsapp" style="color:#25d366"></i> +234 912 401 6770</li>
-        <li><i class="fas fa-envelope" style="color:var(--orange)"></i> info@maywillglobalventures.com</li>
+        <li><i class="fas fa-envelope" style="color:var(--orange)"></i> maywillglobalventuresltd@gmail.com</li>
         <li><i class="fas fa-clock" style="color:var(--orange)"></i> Mon–Sat: 8am – 8pm</li>
         <li><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> C315 Royal Plaza, Opposite Building Material Market, Check Point, Nyanya, FCT</li>
       </ul>
@@ -2878,7 +2878,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const ADMIN_EMAIL = 'oladejiridwanopeyemi@gmail.com';
+const ADMIN_EMAILS = ['oladejiridwanopeyemi@gmail.com', 'maywillglobalventuresltd@gmail.com'];
+const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for backward-compat with any code referencing ADMIN_EMAIL directly
 const ADMIN_WHATSAPP = '2349124016770';
 
 // ===== STATE SHIPPING FEES =====
@@ -2922,7 +2923,7 @@ setLogos();
 // ===== AUTH =====
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
-  isAdmin = user && user.email === ADMIN_EMAIL;
+  isAdmin = user && ADMIN_EMAILS.includes(user.email);
   updateAuthUI();
   if (user) {
     await loadCart();
@@ -6269,7 +6270,7 @@ function buildProductContext() {
 
 function getSystemContext() {
   return `You are Maywill Support Bot — friendly AI assistant for MAYWILL GLOBAL VENTURES LIMITED, a Nigerian online retail store.
-Store: Nigeria | WhatsApp: +234 912 401 6770 | Email: info@maywillglobalventures.com | Hours: Mon–Sat 8AM–8PM WAT
+Store: Nigeria | WhatsApp: +234 912 401 6770 | Email: maywillglobalventuresltd@gmail.com | Hours: Mon–Sat 8AM–8PM WAT
 Payment: 1) Bank Transfer Opay - Maywill Global Ventures Limited | 9124016770 2) Pay on Delivery
 Delivery: Free above ₦150,000. ₦3,500 below. Lagos: 1-2 days. Abuja/PH: 2-3 days. Others: 3-5 days.
 Categories: Men's Fashion, Women's Fashion, Electronics, Baby Products, Home & Kitchen, Beauty, Sports, Phones, Toys, Groceries
@@ -6293,7 +6294,7 @@ function smartLocalReply(text) {
   if (/pay|payment|transfer|bank|opay/.test(t)) return `💳 Payment options:\n1. Bank Transfer (${_accountDetails.bankName}): ${_accountDetails.accountName} | ${_accountDetails.accountNumber}\n2. Pay on Delivery\nChoose at checkout!`;
   if (/track|where is|my order|status/.test(t)) return "📦 Track order: Menu → Track Order → enter Order ID or phone. You also get WhatsApp updates automatically!";
   if (/return|refund|exchange|wrong|damaged/.test(t)) return "😟 For returns/refunds, contact us within 24hrs of delivery via WhatsApp: +234 912 401 6770";
-  if (/contact|whatsapp|call|reach/.test(t)) return "📞 Contact: WhatsApp +234 912 401 6770 | Email: info@maywillglobalventures.com\nMon–Sat 8AM–8PM";
+  if (/contact|whatsapp|call|reach/.test(t)) return "📞 Contact: WhatsApp +234 912 401 6770 | Email: maywillglobalventuresltd@gmail.com\nMon–Sat 8AM–8PM";
   if (/size|sizing|fit/.test(t)) return "📏 Sizes are shown on each product page. Not sure? Message us on WhatsApp: +234 912 401 6770";
   if (/discount|sale|promo|flash/.test(t)) return "🔥 Check Flash Sales on the home page for deals! New offers added regularly 👀";
   if (/categor|what.*sell|collection/.test(t)) return "🛍️ We sell: Men's & Women's Fashion, Electronics, Phones, Baby Products, Home & Kitchen, Beauty, Sports, Groceries & Toys!";
