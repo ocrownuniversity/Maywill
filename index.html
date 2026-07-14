@@ -5631,7 +5631,7 @@ window.applyFilters = function() {
   const cat = document.getElementById('cat-filter').value;
   let results = [...allProducts];
   if(!results.length) return; // products not loaded yet, filterByCategory will retry
-  if(searchQuery) results = results.filter(p=>(p.name||'').toLowerCase().includes(searchQuery)||(p.description||'').toLowerCase().includes(searchQuery));
+  if(searchQuery) results = results.filter(p=>(p.name||'').toLowerCase().includes(searchQuery)||(p.description||'').toLowerCase().includes(searchQuery)||(p.category||'').toLowerCase().includes(searchQuery));
   if(cat && cat !== 'all') results = results.filter(p => (p.category||'').toLowerCase() === cat.toLowerCase());
   if(sort==='price-low') results.sort((a,b)=>{const ap=Number(a.discountPrice)||Number(a.price);const bp=Number(b.discountPrice)||Number(b.price);return ap-bp;});
   else if(sort==='price-high') results.sort((a,b)=>{const ap=Number(a.discountPrice)||Number(a.price);const bp=Number(b.discountPrice)||Number(b.price);return bp-ap;});
