@@ -4297,9 +4297,10 @@ window.testPaystackKey = async function() {
 
 // ===== PRODUCTS =====
 const PRODUCTS_CACHE_KEY = 'maywill-products-cache';
+let _productsUnsub = null;
 
 async function loadProducts() {
-  // Show last-known products instantly from cache (no waiting), then refresh quietly in the background.
+  // Show last-known products instantly from cache (no waiting) while the live connection sets up.
   if (!allProducts.length) {
     try {
       const cached = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null');
@@ -4309,11 +4310,16 @@ async function loadProducts() {
       }
     } catch(e) { /* ignore bad cache */ }
   }
+  // Already listening — no need to set up again (avoids stacking duplicate listeners).
+  if (_productsUnsub) return;
   try {
-    const snap = await getDocs(collection(db,'products'));
-    allProducts = snap.docs.map(d => ({id:d.id,...d.data()}));
-    renderHome();
-    try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(allProducts)); } catch(e) { /* storage full/unavailable — safe to skip */ }
+    _productsUnsub = onSnapshot(collection(db,'products'), (snap) => {
+      allProducts = snap.docs.map(d => ({id:d.id,...d.data()}));
+      renderHome();
+      // Keep the admin products table in sync live too (e.g. stock dropping right after a sale)
+      if (_navStack[_navStack.length-1] === 'admin') { try { loadAdminProducts(); } catch(e) {} }
+      try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(allProducts)); } catch(e) { /* storage full/unavailable — safe to skip */ }
+    }, (e) => console.error('products listener error:', e));
   } catch(e) { console.error(e); }
 }
 
