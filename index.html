@@ -2778,7 +2778,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       </div>
       <div>
         <label class="form-label">Reason / Note *</label>
-        <input class="form-input" id="wallet-adjust-note" placeholder="e.g. Refund for order #BNM-123">
+        <input class="form-input" id="wallet-adjust-note" placeholder="e.g. Refund for order #MAW-123">
       </div>
     </div>
     <div class="modal-footer">
@@ -5208,7 +5208,7 @@ window.placeOrder = async function() {
     const couponDiscount = window._checkoutCouponDiscount || 0;
     const loyaltyDiscount = useLoyaltyDiscount || 0;
     const grandTotal = Math.max(0, subtotal - couponDiscount - loyaltyDiscount + deliveryFee);
-    const orderId = 'BNM-'+Date.now();
+    const orderId = 'MAW-'+Date.now();
     const itemsCopy = [...cart];
     const orderData = {
       orderId, userId: currentUser.uid, userEmail: currentUser.email,
@@ -5330,7 +5330,7 @@ async function placeOrderAfterPaystack(paystackRef) {
     const couponDiscount = window._checkoutCouponDiscount || 0;
     const loyaltyDiscount = useLoyaltyDiscount || 0;
     const grandTotal = Math.max(0, subtotal - couponDiscount - loyaltyDiscount + deliveryFee);
-    const orderId = 'BNM-'+Date.now();
+    const orderId = 'MAW-'+Date.now();
     const itemsCopy = [...cart];
     const orderData = {
       orderId, userId: currentUser.uid, userEmail: currentUser.email,
