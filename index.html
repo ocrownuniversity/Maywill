@@ -2929,7 +2929,7 @@ setLogos();
 // ===== AUTH =====
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
-  isAdmin = user && ADMIN_EMAILS.includes(user.email);
+  isAdmin = !!(user && user.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase()));
   updateAuthUI();
   if (user) {
     await loadCart();
@@ -5771,7 +5771,7 @@ window.editProduct = function(id) {
 };
 
 window.saveProduct = async function() {
-  if(!isAdmin) return;
+  if(!isAdmin) return showToast('You are not signed in as an admin account','error');
   const editId = document.getElementById('edit-product-id').value;
   const name = document.getElementById('p-name').value.trim();
   const price = Number(document.getElementById('p-price').value)||0;
@@ -5802,7 +5802,17 @@ window.saveProduct = async function() {
     closeModal('modal-product');
     await loadProducts();
     loadAdminProducts();
-  } catch(e) { showToast('Failed to save product','error'); }
+  } catch(e) {
+    console.error('saveProduct error:', e);
+    const code = e && e.code ? e.code : '';
+    if (code === 'permission-denied') {
+      showToast('Save blocked: your Firestore Security Rules don\'t allow this admin account to write products yet.', 'error');
+    } else if (code === 'invalid-argument' || (e && /longer than|exceeds/i.test(e.message||''))) {
+      showToast('Save failed: images too large for one product — remove a photo and try again.', 'error');
+    } else {
+      showToast('Failed to save product' + (e && e.message ? (': ' + e.message) : ''), 'error');
+    }
+  }
 };
 
 window.deleteProduct = async function(id) {
