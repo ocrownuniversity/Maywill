@@ -2414,8 +2414,14 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       </div>
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="p-desc" rows="3" placeholder="Product description..."></textarea></div>
       <div class="form-group">
-        <label class="form-label">Product Images (URLs, one per line)</label>
-        <textarea class="form-input" id="p-images" rows="3" placeholder="https://image1.jpg&#10;https://image2.jpg"></textarea>
+        <label class="form-label">Product Images <span style="color:var(--gray-400);font-weight:400;font-size:12px">(upload directly from your device)</span></label>
+        <input type="file" id="p-images-file" accept="image/*" multiple style="display:none" onchange="handleProductImageSelect(this.files)">
+        <div onclick="document.getElementById('p-images-file').click()" style="border:2px dashed var(--orange);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:rgba(109,40,217,.05);transition:.2s" onmouseover="this.style.background='rgba(109,40,217,.1)'" onmouseout="this.style.background='rgba(109,40,217,.05)'">
+          <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--orange);margin-bottom:6px;display:block"></i>
+          <span style="font-size:13px;font-weight:700;color:var(--gray-700)">Tap to select photos</span>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:2px">JPG or PNG · multiple photos allowed · auto-optimized for fast loading</div>
+        </div>
+        <div id="p-images-preview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Available Sizes <span style="color:var(--gray-400);font-weight:400;font-size:12px">(comma-separated, e.g. S, M, L, XL or 39, 40, 41)</span></label>
@@ -2864,6 +2870,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, confirmPasswordReset, GoogleAuthProvider, signInWithPopup, updatePassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCH3uU-xX8le8BXjQiBl0fGXC2i0b5H5Vc",
@@ -2878,6 +2885,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const ADMIN_EMAILS = ['oladejiridwanopeyemi@gmail.com', 'maywillglobalventuresltd@gmail.com'];
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for backward-compat with any code referencing ADMIN_EMAIL directly
 const ADMIN_WHATSAPP = '2349124016770';
@@ -5676,11 +5684,87 @@ window.deleteAddress = async function(id) {
 };
 
 // ===== ADMIN =====
+let _productImageUrls = [];
+let _productImagesUploading = 0;
+
+function compressImageFile(file, maxDim = 1280, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+        else { width = Math.round(width * (maxDim / height)); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        URL.revokeObjectURL(url);
+        blob ? resolve(blob) : reject(new Error('Compression failed'));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Invalid image')); };
+    img.src = url;
+  });
+}
+
+window.handleProductImageSelect = async function(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    const tempId = 'up_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const localPreview = URL.createObjectURL(file);
+    _productImageUrls.push({ id: tempId, url: localPreview, uploading: true });
+    _productImagesUploading++;
+    renderProductImagePreviews();
+    try {
+      const compressed = await compressImageFile(file);
+      const path = `products/${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
+      const fileRef = storageRef(storage, path);
+      await uploadBytes(fileRef, compressed, { contentType: 'image/jpeg' });
+      const downloadUrl = await getDownloadURL(fileRef);
+      const item = _productImageUrls.find(x => x && x.id === tempId);
+      if (item) { item.url = downloadUrl; item.uploading = false; delete item.id; }
+    } catch (e) {
+      showToast('Image upload failed — try again', 'error');
+      _productImageUrls = _productImageUrls.filter(x => !(x && x.id === tempId));
+    } finally {
+      _productImagesUploading--;
+      renderProductImagePreviews();
+    }
+  }
+  document.getElementById('p-images-file').value = '';
+};
+
+window.removeProductImage = function(index) {
+  _productImageUrls.splice(index, 1);
+  renderProductImagePreviews();
+};
+
+function renderProductImagePreviews() {
+  const container = document.getElementById('p-images-preview');
+  if (!container) return;
+  container.innerHTML = _productImageUrls.map((img, i) => {
+    const url = typeof img === 'string' ? img : img.url;
+    const uploading = typeof img === 'object' && img.uploading;
+    return `<div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--gray-200);flex-shrink:0">
+      <img src="${url}" style="width:100%;height:100%;object-fit:cover;${uploading?'opacity:.5':''}">
+      ${uploading ? '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><i class="fas fa-spinner fa-spin" style="color:var(--orange);font-size:18px"></i></div>' : `<button type="button" onclick="removeProductImage(${i})" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>`}
+    </div>`;
+  }).join('');
+}
+
 window.showAddProductModal = function() {
   document.getElementById('product-modal-title').textContent = 'Add Product';
   document.getElementById('edit-product-id').value = '';
-  ['p-name','p-price','p-discount','p-stock','p-desc','p-images','p-sizes','p-colours'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['p-name','p-price','p-discount','p-stock','p-desc','p-sizes','p-colours'].forEach(id=>{ document.getElementById(id).value=''; });
   document.getElementById('p-flash').checked = false;
+  _productImageUrls = [];
+  document.getElementById('p-images-file').value = '';
+  renderProductImagePreviews();
   openModal('modal-product');
 };
 
@@ -5695,7 +5779,9 @@ window.editProduct = function(id) {
   document.getElementById('p-category').value = p.category||'Electronics';
   document.getElementById('p-stock').value = p.stock||'';
   document.getElementById('p-desc').value = p.description||'';
-  document.getElementById('p-images').value = (p.images||[]).join('\n');
+  _productImageUrls = (p.images||[]).slice();
+  document.getElementById('p-images-file').value = '';
+  renderProductImagePreviews();
   document.getElementById('p-sizes').value = (p.sizes||[]).join(', ');
   document.getElementById('p-colours').value = (p.colours||[]).join(', ');
   document.getElementById('p-flash').checked = !!p.isFlash;
@@ -5711,8 +5797,8 @@ window.saveProduct = async function() {
   const category = document.getElementById('p-category').value;
   const stock = Number(document.getElementById('p-stock').value)||0;
   const description = document.getElementById('p-desc').value.trim();
-  const imagesRaw = document.getElementById('p-images').value.trim();
-  const images = imagesRaw ? imagesRaw.split('\n').map(x=>x.trim()).filter(Boolean) : [];
+  const images = _productImageUrls.map(x => typeof x === 'string' ? x : x.url).filter(Boolean);
+  if (_productImagesUploading > 0) return showToast('Please wait — images still uploading','error');
   const sizesRaw = document.getElementById('p-sizes').value.trim();
   const sizes = sizesRaw ? sizesRaw.split(',').map(x=>x.trim()).filter(Boolean) : [];
   const coloursRaw = document.getElementById('p-colours').value.trim();
