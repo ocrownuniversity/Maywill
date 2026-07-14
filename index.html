@@ -940,17 +940,12 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     <div class="sidebar-section-title">Shop by Category</div>
     <div id="sb-categories">
       <div class="sidebar-item" onclick="filterByCategory('all');toggleSidebar()"><i class="fas fa-th"></i> All Products</div>
-      <div class="sidebar-item" onclick="filterByCategory('Electronics');toggleSidebar()"><i class="fas fa-laptop"></i> Electronics</div>
-      <div class="sidebar-item" onclick="filterByCategory('Fashion');toggleSidebar()"><i class="fas fa-tshirt"></i> Fashion</div>
-      <div class="sidebar-item" onclick="filterByCategory('Men\'s Fashion');toggleSidebar()"><i class="fas fa-male"></i> Men's Fashion</div>
-      <div class="sidebar-item" onclick="filterByCategory('Women\'s Fashion');toggleSidebar()"><i class="fas fa-female"></i> Women's Fashion</div>
-      <div class="sidebar-item" onclick="filterByCategory('Baby Products');toggleSidebar()"><i class="fas fa-baby"></i> Baby Products</div>
-      <div class="sidebar-item" onclick="filterByCategory('Home & Kitchen');toggleSidebar()"><i class="fas fa-home"></i> Home & Kitchen</div>
-      <div class="sidebar-item" onclick="filterByCategory('Beauty');toggleSidebar()"><i class="fas fa-spa"></i> Beauty</div>
-      <div class="sidebar-item" onclick="filterByCategory('Sports');toggleSidebar()"><i class="fas fa-futbol"></i> Sports</div>
-      <div class="sidebar-item" onclick="filterByCategory('Groceries');toggleSidebar()"><i class="fas fa-shopping-basket"></i> Groceries</div>
-      <div class="sidebar-item" onclick="filterByCategory('Phones');toggleSidebar()"><i class="fas fa-mobile-alt"></i> Phones</div>
-      <div class="sidebar-item" onclick="filterByCategory('Toys');toggleSidebar()"><i class="fas fa-gamepad"></i> Toys & Games</div>
+      <div class="sidebar-item" onclick="filterByCategory('Kids');toggleSidebar()"><i class="fas fa-child"></i> Kids</div>
+      <div class="sidebar-item" onclick="filterByCategory('Ladies');toggleSidebar()"><i class="fas fa-female"></i> Ladies</div>
+      <div class="sidebar-item" onclick="filterByCategory('Men');toggleSidebar()"><i class="fas fa-male"></i> Men</div>
+      <div class="sidebar-item" onclick="filterByCategory('Household');toggleSidebar()"><i class="fas fa-home"></i> Household</div>
+      <div class="sidebar-item" onclick="filterByCategory('Gadgets and Electronics');toggleSidebar()"><i class="fas fa-laptop"></i> Gadgets and Electronics</div>
+      <div class="sidebar-item" onclick="filterByCategory('Beauty and Cosmetics');toggleSidebar()"><i class="fas fa-spa"></i> Beauty and Cosmetics</div>
     </div>
   </div>
 
@@ -1073,17 +1068,12 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
         <label>Category:</label>
         <select class="filter-select" id="cat-filter" onchange="applyFilters()">
           <option value="all">All</option>
-          <option value="Electronics">Electronics</option>
-          <option value="Fashion">Fashion</option>
-          <option value="Men's Fashion">Men's Fashion</option>
-          <option value="Women's Fashion">Women's Fashion</option>
-          <option value="Baby Products">Baby Products</option>
-          <option value="Home & Kitchen">Home & Kitchen</option>
-          <option value="Beauty">Beauty</option>
-          <option value="Sports">Sports</option>
-          <option value="Groceries">Groceries</option>
-          <option value="Phones">Phones</option>
-          <option value="Toys">Toys</option>
+          <option value="Kids">Kids</option>
+          <option value="Ladies">Ladies</option>
+          <option value="Men">Men</option>
+          <option value="Household">Household</option>
+          <option value="Gadgets and Electronics">Gadgets and Electronics</option>
+          <option value="Beauty and Cosmetics">Beauty and Cosmetics</option>
         </select>
       </div>
     </div>
@@ -2407,7 +2397,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       <div class="form-row">
         <div class="form-group"><label class="form-label">Category *</label>
           <select class="form-input" id="p-category">
-            <option>Electronics</option><option>Fashion</option><option>Men's Fashion</option><option>Women's Fashion</option><option>Baby Products</option><option>Home & Kitchen</option><option>Beauty</option><option>Sports</option><option>Groceries</option><option>Phones</option><option>Toys</option><option>Other</option>
+            <option>Kids</option><option>Ladies</option><option>Men</option><option>Household</option><option>Gadgets and Electronics</option><option>Beauty and Cosmetics</option><option>Other</option>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Stock *</label><input class="form-input" id="p-stock" type="number" placeholder="0"></div>
@@ -2611,12 +2601,12 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
         <label class="form-label">Button Links To</label>
         <select class="form-input" id="banner-btn-action">
           <option value="all">All Products</option>
-          <option value="Men's Fashion">Men's Fashion</option>
-          <option value="Women's Fashion">Women's Fashion</option>
-          <option value="Electronics">Electronics</option>
-          <option value="Beauty">Beauty</option>
-          <option value="Baby Products">Baby Products</option>
-          <option value="Home & Kitchen">Home & Kitchen</option>
+          <option value="Kids">Kids</option>
+          <option value="Ladies">Ladies</option>
+          <option value="Men">Men</option>
+          <option value="Household">Household</option>
+          <option value="Gadgets and Electronics">Gadgets and Electronics</option>
+          <option value="Beauty and Cosmetics">Beauty and Cosmetics</option>
         </select>
       </div>
       <div>
@@ -5771,7 +5761,7 @@ window.editProduct = function(id) {
   document.getElementById('p-name').value = p.name||'';
   document.getElementById('p-price').value = p.price||'';
   document.getElementById('p-discount').value = p.discountPrice||'';
-  document.getElementById('p-category').value = p.category||'Electronics';
+  document.getElementById('p-category').value = p.category||'Kids';
   document.getElementById('p-stock').value = p.stock||'';
   document.getElementById('p-desc').value = p.description||'';
   _productImageUrls = (p.images||[]).slice();
@@ -6365,7 +6355,7 @@ function getSystemContext() {
 Store: Nigeria | WhatsApp: +234 912 401 6770 | Email: maywillglobalventuresltd@gmail.com | Hours: Mon–Sat 8AM–8PM WAT
 Payment: 1) Bank Transfer Opay - Maywill Global Ventures Limited | 9124016770 2) Pay on Delivery
 Delivery: Free above ₦150,000. ₦3,500 below. Lagos: 1-2 days. Abuja/PH: 2-3 days. Others: 3-5 days.
-Categories: Men's Fashion, Women's Fashion, Electronics, Baby Products, Home & Kitchen, Beauty, Sports, Phones, Toys, Groceries
+Categories: Kids, Ladies, Men, Household, Gadgets and Electronics, Beauty and Cosmetics
 Current Products:\n${buildProductContext()}
 Instructions: Answer only about Maywill. Be warm, brief (2-4 lines). Use simple English. If you cannot solve the issue, say so clearly and mention a human agent can help.`;
 }
@@ -6389,7 +6379,7 @@ function smartLocalReply(text) {
   if (/contact|whatsapp|call|reach/.test(t)) return "📞 Contact: WhatsApp +234 912 401 6770 | Email: maywillglobalventuresltd@gmail.com\nMon–Sat 8AM–8PM";
   if (/size|sizing|fit/.test(t)) return "📏 Sizes are shown on each product page. Not sure? Message us on WhatsApp: +234 912 401 6770";
   if (/discount|sale|promo|flash/.test(t)) return "🔥 Check Flash Sales on the home page for deals! New offers added regularly 👀";
-  if (/categor|what.*sell|collection/.test(t)) return "🛍️ We sell: Men's & Women's Fashion, Electronics, Phones, Baby Products, Home & Kitchen, Beauty, Sports, Groceries & Toys!";
+  if (/categor|what.*sell|collection/.test(t)) return "🛍️ We sell: Kids, Ladies, Men, Household, Gadgets and Electronics, and Beauty and Cosmetics products!";
   if (/account|login|sign in|register|password/.test(t)) return "👤 Tap the person icon → Sign In or Create Account. You can also sign in with Google. Need account help?";
   return null; // null = show human transfer option
 }
