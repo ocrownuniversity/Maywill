@@ -4976,20 +4976,12 @@ window.renderCart = function() {
     </div>
   `).join('');
   const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-  const estimatedFee = getShippingFee(window._checkoutSelectedState || '', subtotal);
-  const grandTotal = subtotal + estimatedFee;
   document.getElementById('cart-subtotal').textContent = '₦'+subtotal.toLocaleString();
   const cartDel = document.getElementById('cart-delivery');
-  if (estimatedFee === 0) {
-    cartDel.textContent = 'FREE 🎉';
-    cartDel.style.color = 'var(--green)';
-    cartDel.title = 'Free shipping on orders above ₦150,000';
-  } else {
-    cartDel.textContent = '₦'+estimatedFee.toLocaleString()+' (est.)';
-    cartDel.style.color = 'var(--gray-600)';
-    cartDel.title = 'Exact fee based on delivery state. Free on orders above ₦150,000';
-  }
-  document.getElementById('cart-total').textContent = '\u20a6'+grandTotal.toLocaleString();
+  cartDel.textContent = 'Calculated at checkout';
+  cartDel.style.color = 'var(--gray-500)';
+  cartDel.title = 'Delivery fee depends on your state — you\'ll see the exact amount at checkout';
+  document.getElementById('cart-total').textContent = '\u20a6'+subtotal.toLocaleString();
 };
 
 window.updateCartQty = function(i, delta) {
