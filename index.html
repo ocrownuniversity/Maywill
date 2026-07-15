@@ -457,6 +457,9 @@ body.dark-mode .skel-img::after{background-color:var(--surface)}
 .admin-tab{background:#fff;border:2px solid var(--gray-200);color:var(--gray-600);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
 .admin-tab.active{background:var(--orange);border-color:var(--orange);color:#fff}
 .admin-tab:hover:not(.active){border-color:var(--orange);color:var(--orange)}
+.po-subtab{background:#fff;border:2px solid var(--gray-200);color:var(--gray-600);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
+.po-subtab.active{background:#f97316;border-color:#f97316;color:#fff}
+.po-subtab:hover:not(.active){border-color:#f97316;color:#f97316}
 .admin-card{background:#fff;border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-sm);margin-bottom:12px}
 .admin-card-title{font-size:16px;font-weight:800;color:var(--gray-800);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
 .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
@@ -954,6 +957,10 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     </div>
   </div>
 
+  <div class="sidebar-section">
+    <div class="sidebar-item" onclick="navigate('preorders');toggleSidebar()" style="background:rgba(165,44,113,.08);border-radius:8px;font-weight:800;color:var(--orange)"><i class="fas fa-calendar-check"></i> Preorders <span style="margin-left:auto;font-size:9px;background:var(--orange);color:#fff;padding:2px 6px;border-radius:4px">NEW</span></div>
+  </div>
+
   <div class="sidebar-section" id="sb-account-section">
     <div class="sidebar-section-title">My Account</div>
     <div id="sb-auth-items">
@@ -962,6 +969,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     </div>
     <div id="sb-user-items" class="hidden">
       <div class="sidebar-item" onclick="navigate('orders');toggleSidebar()"><i class="fas fa-box"></i> My Orders</div>
+      <div class="sidebar-item" onclick="navigate('mypreorders');toggleSidebar()"><i class="fas fa-calendar-check"></i> My Preorders</div>
       <div class="sidebar-item" onclick="navigate('wishlist');toggleSidebar()"><i class="fas fa-heart"></i> Wishlist</div>
       <div class="sidebar-item" onclick="navigate('wallet');toggleSidebar()" style="color:var(--green);font-weight:800"><i class="fas fa-wallet"></i> My Wallet <span id="sb-wallet-bal" style="margin-left:auto;font-size:11px;background:rgba(22,163,74,.15);color:var(--green);padding:2px 8px;border-radius:99px">₦0</span></div>
       <div class="sidebar-item" onclick="navigate('profile');toggleSidebar()"><i class="fas fa-user-circle"></i> Profile & Settings</div>
@@ -1210,6 +1218,51 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       </div>
       <div class="product-grid" id="also-bought-grid"></div>
     </div>
+  </div>
+</div>
+
+<!-- PREORDERS BROWSE PAGE -->
+<div id="page-preorders" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigate('home')"><i class="fas fa-arrow-left"></i></button>
+    <h2>Preorders</h2>
+  </div>
+  <div style="padding:14px">
+    <div style="background:linear-gradient(120deg,#a52c71,#e0609d);border-radius:14px;padding:16px;color:#fff;margin-bottom:16px">
+      <div style="font-weight:900;font-size:16px;margin-bottom:4px"><i class="fas fa-calendar-check"></i> Available for Preorder</div>
+      <div style="font-size:13px;opacity:.92">Reserve upcoming items before they arrive. Pay in full or a deposit — you choose.</div>
+    </div>
+    <div id="preorders-grid" class="product-grid"></div>
+    <div id="preorders-empty" style="display:none;text-align:center;padding:50px 20px;color:var(--gray-400)">
+      <i class="fas fa-calendar-check" style="font-size:40px;margin-bottom:10px;display:block"></i>
+      <div style="font-weight:700;font-size:15px">No preorders available right now</div>
+      <div style="font-size:13px;margin-top:4px">Check back soon for upcoming arrivals!</div>
+    </div>
+  </div>
+</div>
+
+<!-- MY PREORDERS PAGE -->
+<div id="page-mypreorders" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigate('home')"><i class="fas fa-arrow-left"></i></button>
+    <h2>My Preorders</h2>
+  </div>
+  <div style="padding:14px" id="my-preorders-list"></div>
+  <div id="my-preorders-empty" style="display:none;text-align:center;padding:50px 20px;color:var(--gray-400)">
+    <i class="fas fa-calendar-check" style="font-size:40px;margin-bottom:10px;display:block"></i>
+    <div style="font-weight:700;font-size:15px">You haven't placed any preorders yet</div>
+    <button class="btn-primary" style="margin-top:14px;max-width:220px" onclick="navigate('preorders')">Browse Preorders</button>
+  </div>
+</div>
+
+<!-- PREORDER DETAIL + CHECKOUT MODAL -->
+<div class="modal-overlay" id="modal-preorder-detail">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span class="modal-title">Preorder Details</span>
+      <button class="modal-close" onclick="closeModal('modal-preorder-detail')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="preorder-detail-body"></div>
   </div>
 </div>
 
@@ -1605,6 +1658,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
 
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchAdminTab('products',this)">Products</button>
+      <button class="admin-tab" onclick="switchAdminTab('preorders',this)">📦 Preorders</button>
       <button class="admin-tab" onclick="switchAdminTab('orders',this)">Orders</button>
       <button class="admin-tab" onclick="switchAdminTab('analytics',this)">📊 Analytics</button>
       <button class="admin-tab" onclick="switchAdminTab('users',this)">Users</button>
@@ -1847,6 +1901,80 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
             <thead><tr><th><input type="checkbox" onchange="document.querySelectorAll('.prod-select-cb').forEach(c=>{c.checked=this.checked;toggleProductSelect(c.dataset.id,c)})"></th><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
             <tbody id="admin-products-body"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+    <!-- Preorders Tab -->
+    <div id="admin-preorders" class="admin-tab-content hidden">
+      <div class="admin-tabs" style="margin-bottom:12px">
+        <button class="po-subtab active" data-po-tab="products" onclick="switchPreorderAdminTab('products',this)">Preorder Products</button>
+        <button class="po-subtab" data-po-tab="orders" onclick="switchPreorderAdminTab('orders',this)">Preorder Orders</button>
+        <button class="po-subtab" data-po-tab="reports" onclick="switchPreorderAdminTab('reports',this)">📊 Reports</button>
+      </div>
+
+      <!-- Preorder Products sub-tab -->
+      <div id="po-tab-products" class="po-tab-content">
+        <div class="admin-card">
+          <div class="admin-card-title">
+            <span>Preorder Products</span>
+            <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="showAddPreorderModal()"><i class="fas fa-plus"></i> Add Preorder Product</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="admin-table">
+              <thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Deposit</th><th>Arrival</th><th>Claimed</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="admin-preorder-products-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preorder Orders sub-tab -->
+      <div id="po-tab-orders" class="po-tab-content hidden">
+        <div class="admin-card">
+          <div class="admin-card-title"><span>Preorder Orders</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <input class="form-input" id="po-order-search" placeholder="Search by name, email or order ID" style="max-width:260px" oninput="renderAdminPreorderOrders()">
+            <select class="form-input" id="po-order-status-filter" style="max-width:190px" onchange="renderAdminPreorderOrders()">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="payment_received">Payment Received</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="ordered_from_supplier">Ordered from Supplier</option>
+              <option value="in_transit">In Transit</option>
+              <option value="arrived">Arrived</option>
+              <option value="ready_for_pickup">Ready for Pickup</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="admin-table">
+              <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Qty</th><th>Amount</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="admin-preorder-orders-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports sub-tab -->
+      <div id="po-tab-reports" class="po-tab-content hidden">
+        <div class="stats-grid" id="po-reports-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px"></div>
+        <div class="admin-card">
+          <div class="admin-card-title"><span>Upcoming Arrivals</span></div>
+          <div id="po-upcoming-arrivals" style="font-size:13px"></div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title"><span>Best-Selling Preorder Products</span></div>
+          <div id="po-best-selling" style="font-size:13px"></div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title"><span>Export Data</span></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-primary" style="width:auto;padding:9px 16px" onclick="exportPreorderCSV()"><i class="fas fa-file-excel"></i> Export to Excel (CSV)</button>
+            <button class="btn-secondary" style="width:auto;padding:9px 16px" onclick="exportPreorderPDF()"><i class="fas fa-file-pdf"></i> Export to PDF</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2437,6 +2565,89 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-product')">Cancel</button>
       <button class="btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Preorder Product Modal -->
+<div class="modal-overlay" id="modal-preorder-product">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="preorder-modal-title">Add Preorder Product</span>
+      <button class="modal-close" onclick="closeModal('modal-preorder-product')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-preorder-id">
+      <div class="form-group"><label class="form-label">Product Name *</label><input class="form-input" id="po-name" placeholder="Product name"></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="po-desc" rows="3" placeholder="Product description..."></textarea></div>
+      <div class="form-group"><label class="form-label">Specifications <span style="color:var(--gray-400);font-weight:400;font-size:12px">(one per line, e.g. Color: Black)</span></label><textarea class="form-input" id="po-specs" rows="3" placeholder="Color: Black&#10;Storage: 128GB"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Preorder Price (&#8358;) *</label><input class="form-input" id="po-price" type="number" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Shipping Cost (&#8358;)</label><input class="form-input" id="po-shipping" type="number" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Deposit % <span style="color:var(--gray-400);font-weight:400;font-size:12px">(0 = full payment only)</span></label><input class="form-input" id="po-deposit" type="number" min="0" max="100" placeholder="e.g. 50"></div>
+        <div class="form-group"><label class="form-label">Quantity Limit <span style="color:var(--gray-400);font-weight:400;font-size:12px">(optional)</span></label><input class="form-input" id="po-qty-limit" type="number" placeholder="Leave blank for unlimited"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Expected Arrival Date *</label><input class="form-input" id="po-arrival-date" type="date"></div>
+        <div class="form-group"><label class="form-label">Preorder Closing Date</label><input class="form-input" id="po-closing-date" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Estimated Delivery Time <span style="color:var(--gray-400);font-weight:400;font-size:12px">(text shown to customers)</span></label><input class="form-input" id="po-delivery-time" placeholder="e.g. 2-3 weeks after arrival"></div>
+      <div class="form-group">
+        <label class="form-label">Product Images <span style="color:var(--gray-400);font-weight:400;font-size:12px">(upload directly from your device)</span></label>
+        <input type="file" id="po-images-file" accept="image/*" multiple style="display:none" onchange="handlePreorderImageSelect(this.files)">
+        <div onclick="document.getElementById('po-images-file').click()" style="border:2px dashed var(--orange);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:rgba(165,44,113,.05)">
+          <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--orange);margin-bottom:6px;display:block"></i>
+          <span style="font-size:13px;font-weight:700;color:var(--gray-700)">Tap to select photos</span>
+        </div>
+        <div id="po-images-preview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px"></div>
+      </div>
+      <div class="form-group" style="background:rgba(165,44,113,.06);border-radius:8px;padding:12px;border:1px solid rgba(165,44,113,.2)">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:700;color:var(--gray-700)">
+          <input type="checkbox" id="po-enabled" checked style="width:18px;height:18px;accent-color:var(--orange);cursor:pointer">
+          <span>Open for preorder (visible to customers)</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-preorder-product')">Cancel</button>
+      <button class="btn-primary" onclick="savePreorderProduct()"><i class="fas fa-save"></i> Save Preorder Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Preorder Order Status Modal -->
+<div class="modal-overlay" id="modal-preorder-status">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Update Preorder Status</span>
+      <button class="modal-close" onclick="closeModal('modal-preorder-status')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="po-status-order-id">
+      <p id="po-status-customer-info" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></p>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="po-status-select">
+          <option value="pending">Pending</option>
+          <option value="payment_received">Payment Received</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="ordered_from_supplier">Ordered from Supplier</option>
+          <option value="in_transit">In Transit</option>
+          <option value="arrived">Arrived</option>
+          <option value="ready_for_pickup">Ready for Pickup</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="refunded">Refunded</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Note to customer (optional)</label><textarea class="form-input" id="po-status-note" rows="2" placeholder="e.g. Your item has cleared customs"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-preorder-status')">Cancel</button>
+      <button class="btn-primary" onclick="submitPreorderStatusUpdate()"><i class="fas fa-check"></i> Update & Notify Customer</button>
     </div>
   </div>
 </div>
@@ -5695,7 +5906,743 @@ window.deleteAddress = async function(id) {
   loadAddresses();
 };
 
+// ================= PREORDER MODULE =================
+let _preorderProducts = [];
+let _preorderProductsUnsub = null;
+let _myPreordersUnsub = null;
+let _allPreorderOrders = [];
+let _adminPreorderOrdersUnsub = null;
+let _adminPreorderProductsUnsub = null;
+let _poDraft = { id:null, qty:1, paymentType:'full', paymentMethod:'paystack', proof:null };
+let _preorderImageUrls = [];
+
+const PREORDER_STATUS_LABELS = {
+  pending:'⏳ Pending', payment_received:'💰 Payment Received', confirmed:'✅ Confirmed',
+  ordered_from_supplier:'📦 Ordered from Supplier', in_transit:'🚚 In Transit', arrived:'📥 Arrived',
+  ready_for_pickup:'🏬 Ready for Pickup', shipped:'🚀 Shipped', delivered:'🎉 Delivered',
+  cancelled:'❌ Cancelled', refunded:'↩️ Refunded'
+};
+const PREORDER_CANCELLABLE_STATUSES = ['pending','payment_received','confirmed'];
+
+function poStatusColor(s) {
+  if (s==='delivered') return '#16a34a';
+  if (s==='cancelled'||s==='refunded') return '#ef4444';
+  if (s==='pending') return '#f59e0b';
+  return '#f97316';
+}
+
+// ---------- CUSTOMER: Browse ----------
+function loadPreorderProducts() {
+  if (!_preorderProducts.length) renderSkeletons('preorders-grid', 4);
+  if (_preorderProductsUnsub) return; // already listening
+  _preorderProductsUnsub = onSnapshot(collection(db,'preorder_products'), (snap) => {
+    _preorderProducts = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderPreorderGrid();
+    if (document.getElementById('admin-preorders') && !document.getElementById('admin-preorders').classList.contains('hidden')) {
+      renderAdminPreorderProductsTable();
+    }
+  }, (e) => console.error('preorder products listener error:', e));
+}
+
+function renderPreorderGrid() {
+  const grid = document.getElementById('preorders-grid');
+  const empty = document.getElementById('preorders-empty');
+  if (!grid) return;
+  const visible = _preorderProducts.filter(p => p.enabled && p.status !== 'converted');
+  if (!visible.length) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  grid.innerHTML = visible.map(preorderCardHTML).join('');
+}
+
+function preorderCardHTML(p) {
+  const img = (p.images && p.images[0]) || 'https://placehold.co/300x300/f3f4f6/9ca3af?text=Preorder';
+  const arrivalStr = p.expectedArrival ? new Date(p.expectedArrival).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}) : 'TBA';
+  const remaining = (p.quantityLimit != null) ? Math.max(0, p.quantityLimit - (p.quantityClaimed||0)) : null;
+  return `<div class="pc" onclick="openPreorderDetail('${p.id}')">
+    <div class="pc-img-wrap">
+      <img src="${img}" onerror="this.src='https://placehold.co/300x300/f3f4f6/9ca3af?text=Preorder'">
+      <span class="pc-badge" style="background:#f97316">Preorder</span>
+    </div>
+    <div class="pc-info" style="padding:10px">
+      <div class="pc-name" style="font-size:13px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name||'')}</div>
+      <div style="font-weight:900;color:var(--orange);font-size:15px">₦${(p.price||0).toLocaleString()}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:3px"><i class="fas fa-calendar"></i> Arrives ${arrivalStr}</div>
+      ${remaining!=null ? `<div style="font-size:11px;color:${remaining<=5?'#ef4444':'var(--gray-400)'};margin-top:2px">${remaining} slot${remaining!==1?'s':''} left</div>` : ''}
+    </div>
+  </div>`;
+}
+
+window.openPreorderDetail = function(id) {
+  const p = _preorderProducts.find(x=>x.id===id);
+  if (!p) return;
+  _poDraft = { id, qty:1, paymentType: (p.depositPercent>0 && p.depositPercent<100) ? 'deposit' : 'full', paymentMethod:'paystack', proof:null };
+  renderPreorderDetailBody(p);
+  openModal('modal-preorder-detail');
+};
+
+function renderPreorderDetailBody(p) {
+  const body = document.getElementById('preorder-detail-body');
+  const images = (p.images && p.images.length) ? p.images : ['https://placehold.co/400x400/f3f4f6/9ca3af?text=Preorder'];
+  const arrivalStr = p.expectedArrival ? new Date(p.expectedArrival).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}) : 'To be announced';
+  const remaining = (p.quantityLimit != null) ? Math.max(0, p.quantityLimit - (p.quantityClaimed||0)) : null;
+  const hasDeposit = p.depositPercent > 0 && p.depositPercent < 100;
+  const specsLines = (p.specs||'').split('\n').filter(Boolean);
+  body.innerHTML = `
+    <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px">
+      ${images.map(src=>`<img src="${src}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.src='https://placehold.co/90x90/f3f4f6/9ca3af?text=Img'">`).join('')}
+    </div>
+    <span style="background:#f97316;color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px">Available for Preorder</span>
+    <h2 style="font-size:19px;margin:8px 0 4px">${escHtml(p.name||'')}</h2>
+    <div style="font-size:22px;font-weight:900;color:var(--orange)">₦${(p.price||0).toLocaleString()}</div>
+    ${p.description ? `<p style="font-size:13px;color:var(--gray-600);margin:8px 0;line-height:1.5">${escHtml(p.description)}</p>` : ''}
+    <div style="background:var(--gray-50);border-radius:10px;padding:12px;margin:10px 0;font-size:13px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gray-500)"><i class="fas fa-calendar"></i> Expected Arrival</span><strong>${arrivalStr}</strong></div>
+      ${p.estimatedDeliveryTime ? `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gray-500)"><i class="fas fa-truck"></i> Delivery Time</span><strong>${escHtml(p.estimatedDeliveryTime)}</strong></div>` : ''}
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gray-500)"><i class="fas fa-box"></i> Shipping Cost</span><strong>₦${(p.shippingCost||0).toLocaleString()}</strong></div>
+      ${remaining!=null ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--gray-500)"><i class="fas fa-cubes"></i> Available Slots</span><strong style="color:${remaining<=5?'#ef4444':'inherit'}">${remaining} left</strong></div>` : ''}
+    </div>
+    ${specsLines.length ? `<div style="margin-bottom:10px"><div style="font-weight:800;font-size:13px;margin-bottom:6px">Specifications</div>${specsLines.map(l=>`<div style="font-size:12px;color:var(--gray-600);padding:3px 0;border-bottom:1px solid var(--gray-100)">${escHtml(l)}</div>`).join('')}</div>` : ''}
+
+    <div class="form-group">
+      <label class="form-label">Quantity</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="changePreorderQty(-1)" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--gray-200);background:#fff;font-weight:900;cursor:pointer">−</button>
+        <span id="po-qty-display" style="font-weight:800;font-size:15px;min-width:20px;text-align:center">1</span>
+        <button onclick="changePreorderQty(1)" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--gray-200);background:#fff;font-weight:900;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    ${hasDeposit ? `
+    <div class="form-group">
+      <label class="form-label">Payment Option</label>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;border:2px solid ${_poDraft.paymentType==='deposit'?'var(--orange)':'var(--gray-200)'};border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:700" onclick="setPreorderPaymentType('deposit')">
+          <input type="radio" name="po-ptype" ${_poDraft.paymentType==='deposit'?'checked':''} style="display:none">
+          Pay Deposit (${p.depositPercent}%)
+        </label>
+        <label style="flex:1;border:2px solid ${_poDraft.paymentType==='full'?'var(--orange)':'var(--gray-200)'};border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:700" onclick="setPreorderPaymentType('full')">
+          <input type="radio" name="po-ptype" ${_poDraft.paymentType==='full'?'checked':''} style="display:none">
+          Pay Full Amount
+        </label>
+      </div>
+    </div>` : ''}
+
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <select class="form-input" id="po-payment-method" onchange="_poDraft.paymentMethod=this.value;renderPreorderPaymentExtras()">
+        <option value="paystack">⚡ Pay Online (Paystack)</option>
+        <option value="bank">🏦 Bank Transfer</option>
+        <option value="wallet">💰 Wallet Balance</option>
+      </select>
+    </div>
+    <div id="po-payment-extras"></div>
+
+    <div id="po-total-summary" style="background:rgba(165,44,113,.06);border-radius:10px;padding:12px;margin:10px 0"></div>
+
+    <button class="btn-primary" onclick="submitPreorderOrder()"><i class="fas fa-calendar-check"></i> Place Preorder</button>
+  `;
+  updatePreorderTotalSummary(p);
+  renderPreorderPaymentExtras();
+}
+
+window.setPreorderPaymentType = function(type) {
+  _poDraft.paymentType = type;
+  const p = _preorderProducts.find(x=>x.id===_poDraft.id);
+  renderPreorderDetailBody(p);
+};
+
+window.changePreorderQty = function(delta) {
+  const p = _preorderProducts.find(x=>x.id===_poDraft.id);
+  if (!p) return;
+  const remaining = (p.quantityLimit != null) ? Math.max(0, p.quantityLimit - (p.quantityClaimed||0)) : Infinity;
+  let newQty = _poDraft.qty + delta;
+  newQty = Math.max(1, Math.min(newQty, remaining));
+  _poDraft.qty = newQty;
+  const el = document.getElementById('po-qty-display');
+  if (el) el.textContent = newQty;
+  updatePreorderTotalSummary(p);
+};
+
+function updatePreorderTotalSummary(p) {
+  const el = document.getElementById('po-total-summary');
+  if (!el || !p) return;
+  const itemTotal = (p.price||0) * _poDraft.qty;
+  const grand = itemTotal + (p.shippingCost||0);
+  const payNow = _poDraft.paymentType === 'deposit' ? Math.round(grand * (p.depositPercent/100)) : grand;
+  const due = grand - payNow;
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Item Total (×${_poDraft.qty})</span><span>₦${itemTotal.toLocaleString()}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Shipping</span><span>₦${(p.shippingCost||0).toLocaleString()}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;border-top:1px solid rgba(165,44,113,.2);padding-top:6px;margin-top:4px"><span>Grand Total</span><span>₦${grand.toLocaleString()}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;color:var(--orange);margin-top:4px"><span>Pay Now</span><span>₦${payNow.toLocaleString()}</span></div>
+    ${due>0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500)"><span>Balance Due Later</span><span>₦${due.toLocaleString()}</span></div>` : ''}
+  `;
+}
+
+function renderPreorderPaymentExtras() {
+  const el = document.getElementById('po-payment-extras');
+  if (!el) return;
+  if (_poDraft.paymentMethod === 'bank') {
+    el.innerHTML = `
+      <div style="background:var(--gray-50);border-radius:8px;padding:10px;font-size:12px;margin-top:6px">
+        <p><strong>Bank:</strong> ${escHtml(_accountDetails.bankName||'')}</p>
+        <p><strong>Account Name:</strong> ${escHtml(_accountDetails.accountName||'')}</p>
+        <p><strong>Account Number:</strong> ${escHtml(_accountDetails.accountNumber||'')}</p>
+        <p style="margin-top:6px;color:var(--orange);font-weight:700">Upload proof of payment below</p>
+      </div>
+      <input type="file" accept="image/*" id="po-proof-file" style="margin-top:8px" onchange="handlePreorderProofUpload(this.files[0])">
+      <div id="po-proof-preview" style="margin-top:8px"></div>
+    `;
+  } else if (_poDraft.paymentMethod === 'wallet') {
+    el.innerHTML = `<div style="font-size:12px;color:var(--gray-500);margin-top:6px">Wallet Balance: <strong>₦${(_walletBalance||0).toLocaleString()}</strong></div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+window.handlePreorderProofUpload = async function(file) {
+  if (!file) return;
+  try {
+    const dataUrl = await compressImageFile(file, 900, 0.7);
+    _poDraft.proof = dataUrl;
+    const preview = document.getElementById('po-proof-preview');
+    if (preview) preview.innerHTML = `<img src="${dataUrl}" style="max-width:120px;border-radius:8px;border:2px solid var(--orange)">`;
+  } catch(e) { showToast('Could not read that image','error'); }
+};
+
+window.submitPreorderOrder = async function() {
+  if (!currentUser) { closeModal('modal-preorder-detail'); navigate('login'); return; }
+  const p = _preorderProducts.find(x=>x.id===_poDraft.id);
+  if (!p) return;
+  if (_poDraft.paymentMethod === 'bank' && !_poDraft.proof) return showToast('Please upload proof of payment','error');
+
+  const itemTotal = (p.price||0) * _poDraft.qty;
+  const grand = itemTotal + (p.shippingCost||0);
+  const payNow = _poDraft.paymentType === 'deposit' ? Math.round(grand * ((p.depositPercent||0)/100)) : grand;
+
+  if (_poDraft.paymentMethod === 'wallet' && _walletBalance < payNow) {
+    return showToast('Insufficient wallet balance. Choose another payment method.','error');
+  }
+
+  if (_poDraft.paymentMethod === 'paystack') {
+    if (!_paystackPublicKey) return showToast('Paystack is not configured. Choose another payment method.','error');
+    if (!window.PaystackPop) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://js.paystack.co/v1/inline.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+    const refId = 'MAYWILL-PRE-' + Date.now() + '-' + Math.random().toString(36).slice(2,8).toUpperCase();
+    const handler = window.PaystackPop.setup({
+      key: _paystackPublicKey,
+      email: currentUser.email,
+      amount: payNow * 100,
+      currency: 'NGN',
+      ref: refId,
+      metadata: { uid: currentUser.uid, purpose: 'preorder_payment' },
+      callback: async function() {
+        await createPreorderOrder(p, payNow, grand, 'paystack', refId);
+      },
+      onClose: function() { showToast('Payment cancelled','info'); }
+    });
+    handler.openIframe();
+    return;
+  }
+
+  if (_poDraft.paymentMethod === 'wallet') {
+    try {
+      await debitWallet(currentUser.uid, payNow, 'purchase', 'Preorder payment: '+(p.name||''), _poDraft.id);
+      await loadWalletBalance();
+      await createPreorderOrder(p, payNow, grand, 'wallet', null);
+    } catch(e) { showToast(friendlyError(e),'error'); }
+    return;
+  }
+
+  // Bank transfer — manual confirmation required
+  await createPreorderOrder(p, payNow, grand, 'bank', null);
+};
+
+async function createPreorderOrder(p, payNow, grand, method, paystackRef) {
+  try {
+    const orderId = 'PRE-'+Date.now();
+    const initialStatus = (method === 'wallet' || method === 'paystack') ? 'payment_received' : 'pending';
+    let buyerPhone = '';
+    try {
+      const uSnap = await getDoc(doc(db,'users',currentUser.uid));
+      if (uSnap.exists()) buyerPhone = uSnap.data().phone || '';
+    } catch(e) {}
+    const orderData = {
+      orderId, userId: currentUser.uid, userEmail: currentUser.email,
+      buyerName: currentUser.displayName || currentUser.email.split('@')[0],
+      buyerPhone,
+      preorderProductId: p.id, productName: p.name||'', productImage: (p.images&&p.images[0])||'',
+      quantity: _poDraft.qty, unitPrice: p.price||0, shippingCost: p.shippingCost||0,
+      totalAmount: grand, paymentType: _poDraft.paymentType, amountPaid: payNow, amountDue: Math.max(0, grand-payNow),
+      paymentMethod: method, paymentProof: _poDraft.proof || null, paystackRef: paystackRef || null,
+      status: initialStatus, cancellable: true,
+      statusHistory: [{ status: initialStatus, at: Date.now(), note: 'Preorder placed' }],
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    };
+    await addDoc(collection(db,'preorder_orders'), orderData);
+    // Reserve the slot
+    try {
+      await updateDoc(doc(db,'preorder_products',p.id), { quantityClaimed: (p.quantityClaimed||0) + _poDraft.qty });
+    } catch(e) { console.warn('Could not update quantityClaimed', e); }
+
+    notifyAdminWhatsAppPreorder(orderId, orderData.buyerName, currentUser.email, p.name, _poDraft.qty, grand, payNow, method);
+    if (orderData.buyerPhone) notifyBuyerWhatsAppPreorder(orderData.buyerPhone, orderId, initialStatus, p.name, orderData.buyerName, grand);
+
+    closeModal('modal-preorder-detail');
+    showToast('Preorder placed successfully! 🎉');
+    navigate('mypreorders');
+  } catch(e) {
+    console.error('createPreorderOrder error:', e);
+    showToast('Failed to place preorder: '+friendlyError(e),'error');
+  }
+}
+
+// ---------- CUSTOMER: My Preorders ----------
+function loadMyPreorders() {
+  if (!currentUser) return;
+  const list = document.getElementById('my-preorders-list');
+  if (_myPreordersUnsub) { try { _myPreordersUnsub(); } catch(e) {} _myPreordersUnsub = null; }
+  _myPreordersUnsub = onSnapshot(query(collection(db,'preorder_orders'), where('userId','==',currentUser.uid)), (snap) => {
+    const docs = [...snap.docs].sort((a,b)=>(b.data().createdAt?.toMillis?.()||0)-(a.data().createdAt?.toMillis?.()||0));
+    const empty = document.getElementById('my-preorders-empty');
+    if (!docs.length) { list.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if (empty) empty.style.display = 'none';
+    list.innerHTML = docs.map(d => {
+      const o = d.data();
+      const canCancel = o.cancellable !== false && PREORDER_CANCELLABLE_STATUSES.includes(o.status);
+      const statuses = Object.keys(PREORDER_STATUS_LABELS).filter(s=>s!=='cancelled'&&s!=='refunded');
+      const curIdx = statuses.indexOf(o.status);
+      return `<div class="admin-card" style="margin-bottom:12px">
+        <div style="display:flex;gap:10px">
+          <img src="${o.productImage||'https://placehold.co/60x60/f3f4f6/9ca3af?text=P'}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:14px">${escHtml(o.productName||'')}</div>
+            <div style="font-size:11px;color:var(--gray-400)">${escHtml(o.orderId||d.id)} · Qty ${o.quantity||1}</div>
+            <div style="font-size:13px;font-weight:700;color:var(--orange);margin-top:2px">₦${(o.totalAmount||0).toLocaleString()}</div>
+          </div>
+          <span style="align-self:flex-start;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;color:#fff;background:${poStatusColor(o.status)};white-space:nowrap">${PREORDER_STATUS_LABELS[o.status]||o.status}</span>
+        </div>
+        ${o.status!=='cancelled' && o.status!=='refunded' ? `<div style="display:flex;gap:2px;margin-top:12px;overflow-x:auto;padding-bottom:2px">
+          ${statuses.map((s,i)=>`<div style="flex:1;min-width:26px;height:5px;border-radius:3px;background:${i<=curIdx?'#f97316':'var(--gray-200)'}"></div>`).join('')}
+        </div>` : ''}
+        ${o.amountDue>0 ? `<div style="font-size:12px;color:var(--gray-500);margin-top:8px">Balance due: <strong>₦${o.amountDue.toLocaleString()}</strong></div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-secondary" style="flex:1;font-size:12px;padding:8px" onclick="viewPreorderTracking('${d.id}')"><i class="fas fa-map-marker-alt"></i> Track</button>
+          ${canCancel ? `<button style="flex:1;font-size:12px;padding:8px;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:8px;font-weight:700;cursor:pointer" onclick="cancelMyPreorder('${d.id}')"><i class="fas fa-times"></i> Cancel</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }, (e) => console.error('my preorders listener error:', e));
+}
+
+window.viewPreorderTracking = function(orderId) {
+  navigate('mypreorders');
+  showToast('Status: ' + (PREORDER_STATUS_LABELS[(_allPreorderOrders.find(o=>o.id===orderId)||{}).status] || 'Check status above'));
+};
+
+window.cancelMyPreorder = async function(orderId) {
+  if (!confirm('Cancel this preorder? This cannot be undone.')) return;
+  try {
+    const oRef = doc(db,'preorder_orders',orderId);
+    const oSnap = await getDoc(oRef);
+    if (!oSnap.exists()) return;
+    const o = oSnap.data();
+    await updateDoc(oRef, {
+      status: 'cancelled', updatedAt: serverTimestamp(),
+      statusHistory: [...(o.statusHistory||[]), { status:'cancelled', at: Date.now(), note:'Cancelled by customer' }]
+    });
+    // Refund to wallet if paid via wallet
+    if (o.paymentMethod === 'wallet' && o.amountPaid > 0) {
+      await creditWallet(currentUser.uid, o.amountPaid, 'refund', 'Preorder cancelled: '+(o.productName||''), o.orderId);
+      await loadWalletBalance();
+    }
+    // Release the claimed slot
+    if (o.preorderProductId) {
+      try {
+        const pRef = doc(db,'preorder_products',o.preorderProductId);
+        const pSnap = await getDoc(pRef);
+        if (pSnap.exists()) await updateDoc(pRef, { quantityClaimed: Math.max(0, (pSnap.data().quantityClaimed||0) - (o.quantity||1)) });
+      } catch(e) {}
+    }
+    showToast('Preorder cancelled');
+  } catch(e) { showToast(friendlyError(e),'error'); }
+};
+
+// ---------- WHATSAPP NOTIFICATIONS ----------
+function notifyAdminWhatsAppPreorder(orderId, buyerName, buyerEmail, productName, qty, total, payNow, method) {
+  const methodLabel = method==='bank'?'🏦 Bank Transfer':method==='wallet'?'💰 Wallet':'⚡ Paystack';
+  const msg = `📅 *New Preorder — Maywill!*\n\n`
+    + `🆔 *Order ID:* ${orderId}\n👤 *Customer:* ${buyerName}\n📧 *Email:* ${buyerEmail}\n\n`
+    + `📦 *Product:* ${productName} ×${qty}\n💳 *Payment:* ${methodLabel}\n`
+    + `💰 *Paid Now:* ₦${(payNow||0).toLocaleString()}\n💵 *Grand Total:* ₦${(total||0).toLocaleString()}\n\n`
+    + `Go to Admin Panel → Preorders to process this.`;
+  window.open('https://wa.me/'+ADMIN_WHATSAPP+'?text='+encodeURIComponent(msg), '_blank');
+}
+
+function notifyBuyerWhatsAppPreorder(phone, orderId, status, productName, buyerName, total) {
+  if (!phone) return;
+  const cleanPhone = phone.replace(/[^0-9]/g,'');
+  const waNum = cleanPhone.startsWith('0') ? '234'+cleanPhone.slice(1) : cleanPhone;
+  const msg = `📅 *Preorder Update — Maywill!*\n\nHi ${buyerName},\n\n`
+    + `Your preorder *${orderId}* for *${productName}* is now:\n\n${PREORDER_STATUS_LABELS[status]||status}\n\n`
+    + `💰 Total: ₦${(total||0).toLocaleString()}\n\nThank you for shopping with Maywill! 💜`;
+  window.open('https://wa.me/'+waNum+'?text='+encodeURIComponent(msg), '_blank');
+}
+
 // ===== ADMIN =====
+
+// ---------- PREORDER ADMIN ----------
+window.switchPreorderAdminTab = function(tab, btn) {
+  document.querySelectorAll('.po-tab-content').forEach(el=>el.classList.add('hidden'));
+  document.querySelectorAll('.po-subtab').forEach(el=>el.classList.remove('active'));
+  const tabEl = document.getElementById('po-tab-'+tab);
+  if (tabEl) tabEl.classList.remove('hidden');
+  if (btn) btn.classList.add('active');
+  if (tab === 'reports') computePreorderReports();
+  if (tab === 'orders') renderAdminPreorderOrders();
+};
+
+function loadAdminPreorders() {
+  loadPreorderProducts(); // sets up the shared products listener + renders admin table when visible
+  renderAdminPreorderProductsTable();
+
+  if (_adminPreorderOrdersUnsub) { try { _adminPreorderOrdersUnsub(); } catch(e) {} _adminPreorderOrdersUnsub = null; }
+  _adminPreorderOrdersUnsub = onSnapshot(collection(db,'preorder_orders'), (snap) => {
+    _allPreorderOrders = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderAdminPreorderOrders();
+    computePreorderReports();
+  }, (e) => console.error('admin preorder orders listener error:', e));
+}
+
+function renderAdminPreorderProductsTable() {
+  const tbody = document.getElementById('admin-preorder-products-body');
+  if (!tbody) return;
+  if (!_preorderProducts.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">No preorder products yet</td></tr>'; return; }
+  tbody.innerHTML = _preorderProducts.map(p => {
+    const img = (p.images&&p.images[0]) || 'https://placehold.co/40x40/f3f4f6/9ca3af?text=P';
+    const arrivalStr = p.expectedArrival ? new Date(p.expectedArrival).toLocaleDateString('en-NG',{day:'numeric',month:'short'}) : '—';
+    const claimed = p.quantityClaimed||0;
+    const limitStr = p.quantityLimit!=null ? `${claimed}/${p.quantityLimit}` : `${claimed}`;
+    const statusBadge = p.status==='converted' ? '<span style="background:var(--gray-200);color:var(--gray-600);font-size:11px;padding:2px 8px;border-radius:6px">Converted</span>'
+      : p.enabled ? '<span style="background:#dcfce7;color:#16a34a;font-size:11px;padding:2px 8px;border-radius:6px">Open</span>'
+      : '<span style="background:#fee2e2;color:#ef4444;font-size:11px;padding:2px 8px;border-radius:6px">Closed</span>';
+    return `<tr>
+      <td><img class="product-thumb-small" src="${img}" onerror="this.src='https://placehold.co/40x40/f3f4f6/9ca3af?text=P'"></td>
+      <td style="font-weight:700;font-size:12px">${escHtml(p.name||'')}</td>
+      <td>₦${(p.price||0).toLocaleString()}</td>
+      <td>${p.depositPercent>0 ? p.depositPercent+'%' : 'Full only'}</td>
+      <td style="font-size:12px">${arrivalStr}</td>
+      <td style="font-size:12px">${limitStr}</td>
+      <td>${statusBadge}</td>
+      <td style="display:flex;flex-direction:column;gap:4px;padding:8px 6px">
+        <button style="background:var(--orange);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:5px 8px;cursor:pointer" onclick="editPreorderProduct('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
+        ${p.status!=='converted' ? `<button style="background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:5px 8px;cursor:pointer" onclick="convertPreorderToInventory('${p.id}')"><i class="fas fa-boxes"></i> Convert</button>` : ''}
+        <button style="background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:5px 8px;cursor:pointer" onclick="deletePreorderProduct('${p.id}')"><i class="fas fa-trash"></i> Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.showAddPreorderModal = function() {
+  document.getElementById('preorder-modal-title').textContent = 'Add Preorder Product';
+  document.getElementById('edit-preorder-id').value = '';
+  ['po-name','po-desc','po-specs','po-price','po-shipping','po-deposit','po-qty-limit','po-arrival-date','po-closing-date','po-delivery-time'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('po-enabled').checked = true;
+  _preorderImageUrls = [];
+  document.getElementById('po-images-file').value = '';
+  renderPreorderImagePreviews();
+  openModal('modal-preorder-product');
+};
+
+window.editPreorderProduct = function(id) {
+  const p = _preorderProducts.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('preorder-modal-title').textContent = 'Edit Preorder Product';
+  document.getElementById('edit-preorder-id').value = id;
+  document.getElementById('po-name').value = p.name||'';
+  document.getElementById('po-desc').value = p.description||'';
+  document.getElementById('po-specs').value = p.specs||'';
+  document.getElementById('po-price').value = p.price||'';
+  document.getElementById('po-shipping').value = p.shippingCost||'';
+  document.getElementById('po-deposit').value = p.depositPercent||'';
+  document.getElementById('po-qty-limit').value = p.quantityLimit!=null ? p.quantityLimit : '';
+  document.getElementById('po-arrival-date').value = p.expectedArrival||'';
+  document.getElementById('po-closing-date').value = p.closingDate||'';
+  document.getElementById('po-delivery-time').value = p.estimatedDeliveryTime||'';
+  document.getElementById('po-enabled').checked = !!p.enabled;
+  _preorderImageUrls = (p.images||[]).slice();
+  document.getElementById('po-images-file').value = '';
+  renderPreorderImagePreviews();
+  openModal('modal-preorder-product');
+};
+
+window.handlePreorderImageSelect = async function(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      const dataUrl = await compressImageFile(file);
+      _preorderImageUrls.push(dataUrl);
+      renderPreorderImagePreviews();
+    } catch(e) { showToast('Could not read that image — try another', 'error'); }
+  }
+  document.getElementById('po-images-file').value = '';
+};
+
+window.removePreorderImage = function(index) {
+  _preorderImageUrls.splice(index, 1);
+  renderPreorderImagePreviews();
+};
+
+function renderPreorderImagePreviews() {
+  const container = document.getElementById('po-images-preview');
+  if (!container) return;
+  container.innerHTML = _preorderImageUrls.map((url, i) => `<div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--gray-200);flex-shrink:0">
+    <img src="${url}" style="width:100%;height:100%;object-fit:cover">
+    <button type="button" onclick="removePreorderImage(${i})" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
+  </div>`).join('');
+}
+
+window.savePreorderProduct = async function() {
+  if (!isAdmin) return showToast('You are not signed in as an admin account','error');
+  const id = document.getElementById('edit-preorder-id').value;
+  const name = document.getElementById('po-name').value.trim();
+  const price = parseFloat(document.getElementById('po-price').value) || 0;
+  const arrival = document.getElementById('po-arrival-date').value;
+  if (!name) return showToast('Product name is required','error');
+  if (!price) return showToast('Preorder price is required','error');
+  if (!arrival) return showToast('Expected arrival date is required','error');
+
+  const images = _preorderImageUrls.slice();
+  const totalImgSize = images.reduce((s,x)=>s+(x?x.length:0),0);
+  if (totalImgSize > 900000) return showToast('Images too large combined — remove one or two photos and try again','error');
+
+  const qtyLimitRaw = document.getElementById('po-qty-limit').value;
+  const data = {
+    name, description: document.getElementById('po-desc').value.trim(),
+    specs: document.getElementById('po-specs').value.trim(),
+    price, shippingCost: parseFloat(document.getElementById('po-shipping').value) || 0,
+    depositPercent: parseFloat(document.getElementById('po-deposit').value) || 0,
+    quantityLimit: qtyLimitRaw ? parseInt(qtyLimitRaw) : null,
+    expectedArrival: arrival, closingDate: document.getElementById('po-closing-date').value || null,
+    estimatedDeliveryTime: document.getElementById('po-delivery-time').value.trim(),
+    images, enabled: document.getElementById('po-enabled').checked,
+    updatedAt: serverTimestamp()
+  };
+
+  try {
+    if (id) {
+      await updateDoc(doc(db,'preorder_products',id), data);
+      showToast('Preorder product updated ✅');
+    } else {
+      data.quantityClaimed = 0;
+      data.status = 'open';
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'preorder_products'), data);
+      showToast('Preorder product added ✅');
+    }
+    closeModal('modal-preorder-product');
+  } catch(e) {
+    console.error('savePreorderProduct error:', e);
+    showToast('Failed to save: '+friendlyError(e),'error');
+  }
+};
+
+window.deletePreorderProduct = async function(id) {
+  if (!confirm('Delete this preorder product? This cannot be undone.')) return;
+  try {
+    await deleteDoc(doc(db,'preorder_products',id));
+    showToast('Preorder product deleted');
+  } catch(e) { showToast(friendlyError(e),'error'); }
+};
+
+window.convertPreorderToInventory = async function(id) {
+  const p = _preorderProducts.find(x=>x.id===id);
+  if (!p) return;
+  const qtyStr = prompt('How many units arrived and should be added to inventory?', String(p.quantityClaimed||0));
+  if (qtyStr === null) return;
+  const qty = parseInt(qtyStr);
+  if (!qty || qty < 0) return showToast('Please enter a valid quantity','error');
+  try {
+    let linkedProductId = p.linkedProductId;
+    if (linkedProductId) {
+      const pRef = doc(db,'products',linkedProductId);
+      const pSnap = await getDoc(pRef);
+      const curStock = pSnap.exists() ? Number(pSnap.data().stock||0) : 0;
+      await updateDoc(pRef, { stock: curStock + qty });
+    } else {
+      const newRef = await addDoc(collection(db,'products'), {
+        name: p.name, description: p.description||'', price: p.price, discountPrice: 0,
+        category: 'Other', stock: qty, images: p.images||[], sizes: [], colours: [],
+        isFlash: false, soldCount: 0, createdAt: serverTimestamp()
+      });
+      linkedProductId = newRef.id;
+    }
+    await updateDoc(doc(db,'preorder_products',id), { status: 'converted', enabled: false, linkedProductId });
+    showToast('Converted to inventory! Now live in your main store. ✅');
+  } catch(e) { showToast('Failed to convert: '+friendlyError(e),'error'); }
+};
+
+// ---------- PREORDER ORDERS (ADMIN) ----------
+function renderAdminPreorderOrders() {
+  const tbody = document.getElementById('admin-preorder-orders-body');
+  if (!tbody) return;
+  const searchEl = document.getElementById('po-order-search');
+  const statusEl = document.getElementById('po-order-status-filter');
+  const search = (searchEl?.value||'').trim().toLowerCase();
+  const statusFilter = statusEl?.value||'';
+  let list = [..._allPreorderOrders].sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
+  if (search) list = list.filter(o => (o.buyerName||'').toLowerCase().includes(search) || (o.userEmail||'').toLowerCase().includes(search) || (o.orderId||'').toLowerCase().includes(search));
+  if (statusFilter) list = list.filter(o => o.status === statusFilter);
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">No preorder orders found</td></tr>'; return; }
+  tbody.innerHTML = list.map(o => `<tr>
+    <td style="font-size:11px;font-weight:800">${escHtml(o.orderId||o.id.slice(0,8))}</td>
+    <td style="font-size:12px"><div style="font-weight:700">${escHtml(o.buyerName||'')}</div><div style="color:var(--gray-400);font-size:11px">${escHtml(o.userEmail||'')}</div></td>
+    <td style="font-size:12px">${escHtml(o.productName||'')}</td>
+    <td>${o.quantity||1}</td>
+    <td style="font-weight:800">₦${(o.totalAmount||0).toLocaleString()}<div style="font-size:10px;color:var(--gray-400);font-weight:400">Paid: ₦${(o.amountPaid||0).toLocaleString()}</div></td>
+    <td style="font-size:12px">${o.paymentMethod==='bank'?'🏦 Bank':o.paymentMethod==='wallet'?'💰 Wallet':'⚡ Paystack'}</td>
+    <td><span style="background:${poStatusColor(o.status)};color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap">${PREORDER_STATUS_LABELS[o.status]||o.status}</span></td>
+    <td style="display:flex;flex-direction:column;gap:4px;padding:8px 6px">
+      <button style="background:var(--orange);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:5px 8px;cursor:pointer;white-space:nowrap" onclick="openPreorderStatusModal('${o.id}','${o.status}','${escHtml(o.userEmail||'')}')"><i class="fas fa-edit"></i> Update</button>
+      ${o.paymentProof ? `<button style="background:var(--gray-100);color:var(--gray-700);border:none;border-radius:6px;font-size:11px;font-weight:700;padding:5px 8px;cursor:pointer" onclick="window.open('${o.paymentProof}','_blank')"><i class="fas fa-receipt"></i> Proof</button>` : ''}
+    </td>
+  </tr>`).join('');
+}
+
+window.openPreorderStatusModal = function(orderId, status, email) {
+  document.getElementById('po-status-order-id').value = orderId;
+  document.getElementById('po-status-select').value = status;
+  document.getElementById('po-status-note').value = '';
+  document.getElementById('po-status-customer-info').textContent = 'Customer: '+email;
+  openModal('modal-preorder-status');
+};
+
+window.submitPreorderStatusUpdate = async function() {
+  const orderId = document.getElementById('po-status-order-id').value;
+  const newStatus = document.getElementById('po-status-select').value;
+  const note = document.getElementById('po-status-note').value.trim();
+  try {
+    const oRef = doc(db,'preorder_orders',orderId);
+    const oSnap = await getDoc(oRef);
+    if (!oSnap.exists()) return showToast('Order not found','error');
+    const o = oSnap.data();
+    const cancellable = PREORDER_CANCELLABLE_STATUSES.includes(newStatus);
+    await updateDoc(oRef, {
+      status: newStatus, cancellable, updatedAt: serverTimestamp(),
+      statusHistory: [...(o.statusHistory||[]), { status:newStatus, at: Date.now(), note: note||'' }]
+    });
+
+    // Auto-deduct inventory once a preorder that's linked to a converted product is delivered
+    if (newStatus === 'delivered') {
+      const pSnap = await getDoc(doc(db,'preorder_products',o.preorderProductId));
+      if (pSnap.exists() && pSnap.data().linkedProductId) {
+        const prodRef = doc(db,'products',pSnap.data().linkedProductId);
+        const prodSnap = await getDoc(prodRef);
+        if (prodSnap.exists()) {
+          const curStock = Number(prodSnap.data().stock||0);
+          const curSold = Number(prodSnap.data().soldCount||0);
+          await updateDoc(prodRef, { stock: Math.max(0,curStock-(o.quantity||1)), soldCount: curSold+(o.quantity||1) });
+        }
+      }
+    }
+
+    if (o.buyerPhone) notifyBuyerWhatsAppPreorder(o.buyerPhone, o.orderId, newStatus, o.productName, o.buyerName, o.totalAmount);
+    closeModal('modal-preorder-status');
+    showToast('Status updated & customer notified ✅');
+  } catch(e) { showToast('Failed to update: '+friendlyError(e),'error'); }
+};
+
+// ---------- REPORTS ----------
+function computePreorderReports() {
+  const statsEl = document.getElementById('po-reports-stats');
+  if (!statsEl) return;
+  const totalProducts = _preorderProducts.length;
+  const active = _allPreorderOrders.filter(o=>!['delivered','cancelled','refunded'].includes(o.status)).length;
+  const pendingPayments = _allPreorderOrders.filter(o=>o.status==='pending').length;
+  const completed = _allPreorderOrders.filter(o=>o.status==='delivered').length;
+  const cancelled = _allPreorderOrders.filter(o=>o.status==='cancelled'||o.status==='refunded').length;
+  const revenue = _allPreorderOrders.reduce((s,o)=>s+(o.amountPaid||0),0);
+
+  const cards = [
+    ['Total Preorder Products', totalProducts, '#a52c71'],
+    ['Active Preorders', active, '#f97316'],
+    ['Pending Payments', pendingPayments, '#f59e0b'],
+    ['Completed', completed, '#16a34a'],
+    ['Cancelled', cancelled, '#ef4444'],
+    ['Revenue', '₦'+revenue.toLocaleString(), '#a52c71'],
+  ];
+  statsEl.innerHTML = cards.map(([label,val,color])=>`<div class="admin-card" style="text-align:center;padding:14px;border-top:3px solid ${color}">
+    <div style="font-size:20px;font-weight:900;color:${color}">${val}</div>
+    <div style="font-size:11px;color:var(--gray-500);margin-top:4px;font-weight:700">${label}</div>
+  </div>`).join('');
+
+  // Upcoming arrivals
+  const upcoming = _preorderProducts.filter(p=>p.status!=='converted' && p.expectedArrival).sort((a,b)=>new Date(a.expectedArrival)-new Date(b.expectedArrival)).slice(0,6);
+  const upEl = document.getElementById('po-upcoming-arrivals');
+  if (upEl) {
+    upEl.innerHTML = upcoming.length ? upcoming.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+      <span>${escHtml(p.name||'')}</span><strong>${new Date(p.expectedArrival).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'})}</strong>
+    </div>`).join('') : '<p style="color:var(--gray-400)">No upcoming arrivals</p>';
+  }
+
+  // Best-selling preorder products
+  const salesMap = {};
+  _allPreorderOrders.forEach(o=>{ if(o.status==='cancelled'||o.status==='refunded') return; salesMap[o.productName||'—'] = (salesMap[o.productName||'—']||0) + (o.quantity||1); });
+  const best = Object.entries(salesMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const bestEl = document.getElementById('po-best-selling');
+  if (bestEl) {
+    bestEl.innerHTML = best.length ? best.map(([name,qty])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+      <span>${escHtml(name)}</span><strong>${qty} sold</strong>
+    </div>`).join('') : '<p style="color:var(--gray-400)">No sales yet</p>';
+  }
+}
+
+window.exportPreorderCSV = function() {
+  if (!_allPreorderOrders.length) return showToast('No preorder orders to export','error');
+  const headers = ['Order ID','Customer','Email','Product','Qty','Unit Price','Shipping','Total','Paid','Due','Payment Method','Status','Date'];
+  const rows = _allPreorderOrders.map(o => [
+    o.orderId||o.id, o.buyerName||'', o.userEmail||'', o.productName||'', o.quantity||1,
+    o.unitPrice||0, o.shippingCost||0, o.totalAmount||0, o.amountPaid||0, o.amountDue||0,
+    o.paymentMethod||'', o.status||'', o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-NG') : ''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'maywill-preorders-'+Date.now()+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV exported — opens in Excel ✅');
+};
+
+window.exportPreorderPDF = function() {
+  if (!_allPreorderOrders.length) return showToast('No preorder orders to export','error');
+  const rows = _allPreorderOrders.map(o => `<tr>
+    <td>${escHtml(o.orderId||o.id)}</td><td>${escHtml(o.buyerName||'')}</td><td>${escHtml(o.productName||'')}</td>
+    <td>${o.quantity||1}</td><td>₦${(o.totalAmount||0).toLocaleString()}</td><td>${escHtml((o.status||'').replace(/_/g,' '))}</td>
+  </tr>`).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>Maywill Preorder Report</title>
+    <style>body{font-family:Arial,sans-serif;padding:24px}h1{color:#a52c71}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#a52c71;color:#fff}</style>
+    </head><body><h1>Maywill Global Ventures — Preorder Report</h1><p>Generated: ${new Date().toLocaleString('en-NG')}</p>
+    <table><thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+    </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 400);
+};
+
 let _productImageUrls = [];
 
 // Compresses an image on-device and returns a base64 data URL — no network upload needed,
@@ -6262,6 +7209,7 @@ window.switchAdminTab = function(tab, btn) {
   if(tabEl) tabEl.classList.remove('hidden');
   if(btn) btn.classList.add('active');
   if(tab==='products') loadAdminProducts();
+  else if(tab==='preorders') loadAdminPreorders();
   else if(tab==='orders') loadAdminOrders();
   else if(tab==='users') loadAdminUsers();
   else if(tab==='reviews') loadAdminReviews();
@@ -6986,6 +7934,8 @@ function _showPage(page) {
   if(page==='wishlist') renderWishlist();
   if(page==='addresses') loadAddresses();
   if(page==='search') { if(!allProducts.length) loadProducts(); applyFilters(); }
+  if(page==='preorders') loadPreorderProducts();
+  if(page==='mypreorders') { if(!currentUser) { navigate('login'); return; } loadMyPreorders(); }
   if(page==='admin') { loadAdminProducts(); loadAdminStats(); loadAdminOrders(); updatePWResetBadge(); }
   if(page==='profile') loadUserProfile();
   if(page==='wallet') { loadWalletBalance(); loadWalletTransactions(); loadPaystackSettings(); }
