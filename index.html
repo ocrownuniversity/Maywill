@@ -1499,17 +1499,17 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     <div class="auth-card">
       <div class="auth-logo"><span style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;color:#a52c71;letter-spacing:-0.5px;cursor:pointer" onclick="navigate('home')">MAYWILL</span></div>
       <h2 class="auth-title">Forgot Password?</h2>
-      <p class="auth-subtitle">Enter your email and WhatsApp number. Our admin will send your reset link via WhatsApp.</p>
+      <p class="auth-subtitle">Enter your email and we'll send you a password reset link right away.</p>
       <div id="forgot-form-wrap">
         <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="forgot-email" type="email" placeholder="you@example.com"></div>
-        <div class="form-group"><label class="form-label">Your WhatsApp Number <span style="font-size:11px;color:var(--gray-400)">(receives the reset link)</span></label><input class="form-input" id="forgot-phone" type="tel" placeholder="+2348012345678"></div>
-        <button class="btn-auth" onclick="doForgotPassword()" id="forgot-submit-btn"><i class="fab fa-whatsapp"></i> Request Reset via WhatsApp</button>
+        <button class="btn-auth" onclick="doForgotPassword()" id="forgot-submit-btn"><i class="fas fa-envelope"></i> Send Reset Link</button>
+        <div style="margin-top:14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:10px;padding:12px;font-size:12px;color:#c2410c;font-weight:700"><i class="fas fa-exclamation-circle"></i> Please also check your Spam or Junk folder — reset emails sometimes land there.</div>
       </div>
       <div id="forgot-success-msg" style="display:none;text-align:center;padding:18px 0">
         <div style="font-size:48px;margin-bottom:12px">✅</div>
-        <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:8px">Request Submitted!</div>
-        <div style="font-size:13px;color:var(--gray-500);line-height:1.6">Our admin team will send your password reset link via WhatsApp shortly. Please keep an eye on your WhatsApp messages.</div>
-        <div style="margin-top:14px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:10px;padding:12px;font-size:12px;color:#128C7E;font-weight:700"><i class="fab fa-whatsapp"></i> Check your WhatsApp for the secure reset link</div>
+        <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:8px">Reset Link Sent!</div>
+        <div style="font-size:13px;color:var(--gray-500);line-height:1.6">Check your email for a link to reset your password.</div>
+        <div style="margin-top:14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:10px;padding:12px;font-size:12px;color:#c2410c;font-weight:700"><i class="fas fa-exclamation-circle"></i> Don't see it? Check your Spam or Junk folder — it can take a few minutes to arrive.</div>
       </div>
       <div class="auth-switch" style="margin-top:16px"><a onclick="navigate('login')"><i class="fas fa-arrow-left"></i> Back to Sign In</a></div>
     </div>
@@ -3294,53 +3294,33 @@ function generateSecureToken() {
 
 window.doForgotPassword = async function() {
   const email = document.getElementById('forgot-email').value.trim().toLowerCase();
-  const phone = (document.getElementById('forgot-phone')?.value || '').trim();
   if (!email) return showToast('Please enter your email address','error');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showToast('Please enter a valid email address','error');
-  if (!phone) return showToast('Please enter your WhatsApp number','error');
 
   if (!checkPWResetRateLimit(email)) {
     return showToast('Too many requests. Please wait 5 minutes before trying again.','error');
   }
 
   const btn = document.getElementById('forgot-submit-btn');
-  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
   try {
-    let fullName = '', username = '';
-    try {
-      const usersSnap = await getDocs(query(collection(db,'users'), where('email','==',email)));
-      if (!usersSnap.empty) {
-        const ud = usersSnap.docs[0].data();
-        fullName = ud.name || '';
-        username = ud.username || email.split('@')[0];
-      }
-    } catch(e) {}
-
-    const device = navigator.userAgent.slice(0, 120);
-    const now = new Date();
-
-    await addDoc(collection(db, 'password_reset_requests'), {
-      email, phone, fullName,
-      username: username || email.split('@')[0],
-      status: 'pending',
-      requestedAt: serverTimestamp(),
-      requestedAtISO: now.toISOString(),
-      device,
-      tokenUsed: false, token: null, tokenExpiry: null,
-      sentAt: null, completedAt: null,
-      auditLog: [{ action: 'request_submitted', timestamp: now.toISOString(), detail: `Reset request submitted for ${email} (WhatsApp: ${phone})` }]
-    });
-
+    await sendPasswordResetEmail(auth, email);
     document.getElementById('forgot-form-wrap').style.display = 'none';
     document.getElementById('forgot-success-msg').style.display = 'block';
-    showToast('Request submitted! Admin will WhatsApp you the reset link.','success');
-    updatePWResetBadge();
+    showToast('Reset link sent! Check your email (and spam folder).','success');
   } catch(e) {
     console.error('Forgot password error:', e);
-    showToast('Something went wrong. Please try again.','error');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fab fa-whatsapp"></i> Request Reset via WhatsApp';
+    // Don't reveal whether the email exists — show the same success state either way for security.
+    if (e && (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email')) {
+      document.getElementById('forgot-form-wrap').style.display = 'none';
+      document.getElementById('forgot-success-msg').style.display = 'block';
+      showToast('If that email is registered, a reset link has been sent.','success');
+    } else {
+      showToast('Something went wrong. Please try again.','error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-envelope"></i> Send Reset Link';
+    }
   }
 };
 
