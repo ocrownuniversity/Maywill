@@ -948,12 +948,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     <div class="sidebar-section-title">Shop by Category</div>
     <div id="sb-categories">
       <div class="sidebar-item" onclick="filterByCategory('all');toggleSidebar()"><i class="fas fa-th"></i> All Products</div>
-      <div class="sidebar-item" onclick="filterByCategory('Kids');toggleSidebar()"><i class="fas fa-child"></i> Kids</div>
-      <div class="sidebar-item" onclick="filterByCategory('Ladies');toggleSidebar()"><i class="fas fa-female"></i> Ladies</div>
-      <div class="sidebar-item" onclick="filterByCategory('Men');toggleSidebar()"><i class="fas fa-male"></i> Men</div>
-      <div class="sidebar-item" onclick="filterByCategory('Household');toggleSidebar()"><i class="fas fa-home"></i> Household</div>
-      <div class="sidebar-item" onclick="filterByCategory('Gadgets and Electronics');toggleSidebar()"><i class="fas fa-laptop"></i> Gadgets and Electronics</div>
-      <div class="sidebar-item" onclick="filterByCategory('Beauty and Cosmetics');toggleSidebar()"><i class="fas fa-spa"></i> Beauty and Cosmetics</div>
+      <div id="sb-categories-dynamic"></div>
     </div>
   </div>
 
@@ -1002,6 +997,11 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
 
 <!-- HOME PAGE -->
 <div id="page-home" class="page active">
+  <!-- Sitewide Sale Banner — hidden unless admin has an active sale running -->
+  <div id="sitewide-sale-banner" class="hidden" style="background:linear-gradient(90deg,#f97316,#fb923c);color:#fff;padding:10px 14px;text-align:center;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+    <span id="sitewide-sale-text"></span>
+    <span id="sitewide-sale-countdown" style="background:rgba(0,0,0,.2);padding:2px 8px;border-radius:6px;font-variant-numeric:tabular-nums"></span>
+  </div>
   <!-- Hero Slider -->
   <div class="hero-slider">
     <div class="slides-container" id="slides">
@@ -1012,6 +1012,15 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     <button class="slider-prev" onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
     <button class="slider-next" onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
     <div class="slider-dots" id="slider-dots"></div>
+  </div>
+
+  <!-- New Arrivals — shows first, right below the hero banner -->
+  <div class="home-section hidden" id="newarrivals-section">
+    <div class="home-section-header">
+      <span class="home-section-title" style="color:#16a34a">🆕 New Arrivals</span>
+      <span class="home-see-all" style="color:#16a34a" onclick="filterByCategory('all')">See All <i class="fas fa-chevron-right"></i></span>
+    </div>
+    <div class="product-grid" id="newarrivals-grid"></div>
   </div>
 
   <!-- Flash Sales &mdash; directly below banner (ref image style) -->
@@ -1081,12 +1090,6 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
         <label>Category:</label>
         <select class="filter-select" id="cat-filter" onchange="applyFilters()">
           <option value="all">All</option>
-          <option value="Kids">Kids</option>
-          <option value="Ladies">Ladies</option>
-          <option value="Men">Men</option>
-          <option value="Household">Household</option>
-          <option value="Gadgets and Electronics">Gadgets and Electronics</option>
-          <option value="Beauty and Cosmetics">Beauty and Cosmetics</option>
         </select>
       </div>
     </div>
@@ -1658,6 +1661,8 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
 
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchAdminTab('products',this)">Products</button>
+      <button class="admin-tab" onclick="switchAdminTab('sale',this)">🔥 Sitewide Sale</button>
+      <button class="admin-tab" onclick="switchAdminTab('categories',this)">🏷️ Categories</button>
       <button class="admin-tab" onclick="switchAdminTab('preorders',this)">📦 Preorders</button>
       <button class="admin-tab" onclick="switchAdminTab('orders',this)">Orders</button>
       <button class="admin-tab" onclick="switchAdminTab('analytics',this)">📊 Analytics</button>
@@ -1902,6 +1907,41 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
             <tbody id="admin-products-body"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+    <!-- Sitewide Sale Tab -->
+    <div id="admin-sale" class="admin-tab-content hidden">
+      <div class="admin-card">
+        <div class="admin-card-title"><span>🔥 Sitewide Sale</span></div>
+        <p style="font-size:12px;color:var(--gray-500);margin-bottom:14px">Run a time-limited discount across every product on your site — no need to edit products one by one. It automatically ends and prices return to normal once the time is up.</p>
+
+        <div id="sale-status-box" style="display:none;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:10px;padding:14px;margin-bottom:16px">
+          <div style="font-weight:900;color:#f97316;font-size:15px" id="sale-status-title"></div>
+          <div style="font-size:13px;color:var(--gray-600);margin-top:4px" id="sale-status-detail"></div>
+          <button style="margin-top:10px;background:#ef4444;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer" onclick="endSitewideSaleNow()"><i class="fas fa-stop-circle"></i> End Sale Now</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Discount Percentage (%)</label><input class="form-input" id="sale-percent" type="number" min="1" max="90" placeholder="e.g. 10"></div>
+          <div class="form-group"><label class="form-label">Duration (hours)</label><input class="form-input" id="sale-duration" type="number" min="1" placeholder="e.g. 24"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Banner Message <span style="color:var(--gray-400);font-weight:400;font-size:12px">(optional — shown at the top of the site)</span></label><input class="form-input" id="sale-label" placeholder="e.g. 🎉 Anniversary Sale — 10% OFF Everything!"></div>
+        <button class="btn-primary" onclick="startSitewideSale()"><i class="fas fa-bolt"></i> Start Sale</button>
+      </div>
+    </div>
+    <!-- Categories Tab -->
+    <div id="admin-categories" class="admin-tab-content hidden">
+      <div class="admin-card">
+        <div class="admin-card-title"><span>Add New Category</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input class="form-input" id="new-category-name" placeholder="e.g. Sports & Outdoors" style="flex:1;min-width:200px">
+          <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="addCustomCategory()"><i class="fas fa-plus"></i> Add Category</button>
+        </div>
+        <p style="font-size:12px;color:var(--gray-400);margin-top:8px">New categories show up instantly in the sidebar, search filter, product form, and banner links across the site.</p>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><span>All Categories</span></div>
+        <div id="admin-categories-list" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
     </div>
     <!-- Preorders Tab -->
@@ -2529,9 +2569,7 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Category *</label>
-          <select class="form-input" id="p-category">
-            <option>Kids</option><option>Ladies</option><option>Men</option><option>Household</option><option>Gadgets and Electronics</option><option>Beauty and Cosmetics</option><option>Other</option>
-          </select>
+          <select class="form-input" id="p-category"></select>
         </div>
         <div class="form-group"><label class="form-label">Stock *</label><input class="form-input" id="p-stock" type="number" placeholder="0"></div>
       </div>
@@ -2560,6 +2598,13 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
           <span><i class="fas fa-bolt" style="color:var(--orange)"></i> Show in Flash Sales section on homepage</span>
         </label>
         <p style="font-size:12px;color:var(--gray-400);margin-top:4px;margin-left:28px">Tick this to feature the product in the Flash Deals section.</p>
+      </div>
+      <div class="form-group" style="background:rgba(22,163,74,.06);border-radius:8px;padding:12px;border:1px solid rgba(22,163,74,.2)">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:700;color:var(--gray-700)">
+          <input type="checkbox" id="p-newarrival" style="width:18px;height:18px;accent-color:#16a34a;cursor:pointer">
+          <span><i class="fas fa-star" style="color:#16a34a"></i> Mark as New Arrival</span>
+        </label>
+        <p style="font-size:12px;color:var(--gray-400);margin-top:4px;margin-left:28px">Shows in the New Arrivals section at the very top of the homepage.</p>
       </div>
     </div>
     <div class="modal-footer">
@@ -2817,12 +2862,6 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
         <label class="form-label">Button Links To</label>
         <select class="form-input" id="banner-btn-action">
           <option value="all">All Products</option>
-          <option value="Kids">Kids</option>
-          <option value="Ladies">Ladies</option>
-          <option value="Men">Men</option>
-          <option value="Household">Household</option>
-          <option value="Gadgets and Electronics">Gadgets and Electronics</option>
-          <option value="Beauty and Cosmetics">Beauty and Cosmetics</option>
         </select>
       </div>
       <div>
@@ -3124,6 +3163,22 @@ let searchQuery = '';
 let searchCategory = 'all';
 let unsubListeners = [];
 
+const DEFAULT_CATEGORIES = [
+  { name:'Kids', icon:'fa-child' },
+  { name:'Ladies', icon:'fa-female' },
+  { name:'Men', icon:'fa-male' },
+  { name:'Household', icon:'fa-home' },
+  { name:'Gadgets and Electronics', icon:'fa-laptop' },
+  { name:'Beauty and Cosmetics', icon:'fa-spa' },
+  { name:'Fashion', icon:'fa-tshirt' },
+  { name:'Health and Fitness', icon:'fa-dumbbell' }
+];
+let _customCategories = []; // [{id, name}]
+let _categoriesUnsub = null;
+let _sitewideSale = { active:false, percent:0, startAt:null, endAt:null, label:'' };
+let _sitewideSaleUnsub = null;
+let _sitewideSaleCountdownInterval = null;
+
 // ===== LOGO =====
 // Use inline text/SVG logo — no external file needed for GitHub Pages
 function setLogos() {
@@ -3155,6 +3210,13 @@ onAuthStateChanged(auth, async (user) => {
 loadPaystackSettings();
 // Load bank account details on startup (for all users) — keeps checkout, wallet funding, FAQ, receipts in sync
 loadAccountDetails();
+// Load categories on startup — defaults render instantly, custom ones layer in live
+renderSidebarCategories();
+renderCategoryFilterDropdown();
+renderProductFormCategoryOptions();
+renderBannerCategoryOptions();
+loadCategories();
+loadSitewideSale();
 
 function updateAuthUI() {
   const loggedIn = !!currentUser;
@@ -4307,14 +4369,6 @@ async function openAdminWalletHistory(uid, w) {
 }
 
 // ---- BANK ACCOUNT DETAILS (admin-editable, shown site-wide) ----
-let _accountDetails = {
-  bankName: 'Opay',
-  accountName: 'Maywill Global Ventures Limited',
-  accountNumber: '9124016770',
-  phone: '+2349124016770',
-  note: 'Please transfer exact amount and include your order ID as reference.'
-};
-
 async function loadAccountDetails() {
   try {
     const snap = await getDoc(doc(db,'settings','bank_account'));
@@ -4492,6 +4546,192 @@ window.testPaystackKey = async function() {
 };
 
 // ===== PRODUCTS =====
+// ================= CATEGORIES MODULE =================
+
+function getAllCategories() {
+  const defaultNames = DEFAULT_CATEGORIES.map(c=>c.name.toLowerCase());
+  const customOnly = _customCategories.filter(c => !defaultNames.includes((c.name||'').toLowerCase()));
+  return [...DEFAULT_CATEGORIES, ...customOnly.map(c => ({ name:c.name, icon:'fa-tag', custom:true, id:c.id }))];
+}
+
+function loadCategories() {
+  if (_categoriesUnsub) return;
+  _categoriesUnsub = onSnapshot(collection(db,'categories'), (snap) => {
+    _customCategories = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderSidebarCategories();
+    renderCategoryFilterDropdown();
+    renderProductFormCategoryOptions();
+    renderBannerCategoryOptions();
+    renderAdminCategoriesList();
+  }, (e) => console.error('categories listener error:', e));
+}
+
+function renderSidebarCategories() {
+  const el = document.getElementById('sb-categories-dynamic');
+  if (!el) return;
+  el.innerHTML = getAllCategories().map(c =>
+    `<div class="sidebar-item" onclick="filterByCategory('${c.name.replace(/'/g,"\\'")}');toggleSidebar()"><i class="fas ${c.icon}"></i> ${escHtml(c.name)}</div>`
+  ).join('');
+}
+
+function renderCategoryFilterDropdown() {
+  const el = document.getElementById('cat-filter');
+  if (!el) return;
+  const current = el.value;
+  el.innerHTML = '<option value="all">All</option>' + getAllCategories().map(c =>
+    `<option value="${escHtml(c.name)}">${escHtml(c.name)}</option>`
+  ).join('');
+  if ([...el.options].some(o=>o.value===current)) el.value = current;
+}
+
+function renderProductFormCategoryOptions() {
+  const el = document.getElementById('p-category');
+  if (!el) return;
+  const current = el.value;
+  el.innerHTML = getAllCategories().map(c => `<option>${escHtml(c.name)}</option>`).join('') + '<option>Other</option>';
+  if ([...el.options].some(o=>o.value===current)) el.value = current;
+}
+
+function renderBannerCategoryOptions() {
+  const el = document.getElementById('banner-btn-action');
+  if (!el) return;
+  const current = el.value;
+  el.innerHTML = '<option value="all">All Products</option>' + getAllCategories().map(c =>
+    `<option value="${escHtml(c.name)}">${escHtml(c.name)}</option>`
+  ).join('');
+  if ([...el.options].some(o=>o.value===current)) el.value = current;
+}
+
+window.addCustomCategory = async function() {
+  if (!isAdmin) return showToast('You are not signed in as an admin account','error');
+  const input = document.getElementById('new-category-name');
+  const name = input.value.trim();
+  if (!name) return showToast('Please enter a category name','error');
+  const existing = getAllCategories().map(c=>c.name.toLowerCase());
+  if (existing.includes(name.toLowerCase())) return showToast('That category already exists','error');
+  try {
+    await addDoc(collection(db,'categories'), { name, createdAt: serverTimestamp() });
+    input.value = '';
+    showToast('Category added ✅');
+  } catch(e) { showToast('Failed to add category: '+friendlyError(e),'error'); }
+};
+
+window.deleteCustomCategory = async function(id) {
+  if (!confirm('Delete this category? Products already using it will keep the label but it will no longer appear in the menus.')) return;
+  try {
+    await deleteDoc(doc(db,'categories',id));
+    showToast('Category deleted');
+  } catch(e) { showToast(friendlyError(e),'error'); }
+};
+
+function renderAdminCategoriesList() {
+  const el = document.getElementById('admin-categories-list');
+  if (!el) return;
+  el.innerHTML = getAllCategories().map(c => `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--gray-50);border-radius:8px">
+    <span style="font-size:13px;font-weight:700"><i class="fas ${c.icon}" style="color:var(--orange);margin-right:8px"></i>${escHtml(c.name)}</span>
+    ${c.custom ? `<button onclick="deleteCustomCategory('${c.id}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer"><i class="fas fa-trash"></i> Delete</button>`
+      : `<span style="font-size:10px;color:var(--gray-400);font-weight:700;background:var(--gray-100);padding:3px 8px;border-radius:6px">DEFAULT</span>`}
+  </div>`).join('');
+}
+
+// ================= SITEWIDE SALE MODULE =================
+function loadSitewideSale() {
+  if (_sitewideSaleUnsub) return;
+  _sitewideSaleUnsub = onSnapshot(doc(db,'settings','sitewide_sale'), (snap) => {
+    _sitewideSale = snap.exists() ? snap.data() : { active:false, percent:0, startAt:null, endAt:null, label:'' };
+    renderSitewideSaleBanner();
+    renderAdminSaleForm();
+    renderHome(); // refresh prices across the homepage
+  }, (e) => console.error('sitewide sale listener error:', e));
+}
+
+function isSitewideSaleActive() {
+  if (!_sitewideSale || !_sitewideSale.active) return false;
+  const now = Date.now();
+  const start = _sitewideSale.startAt ? new Date(_sitewideSale.startAt).getTime() : 0;
+  const end = _sitewideSale.endAt ? new Date(_sitewideSale.endAt).getTime() : 0;
+  return now >= start && now <= end;
+}
+
+// Central price calculator — factors in a product's own discountPrice AND an active sitewide sale.
+function getEffectivePrice(p) {
+  const price = Number(p.price)||0;
+  const ownDisc = Number(p.discountPrice)||0;
+  const basePrice = (ownDisc>0 && ownDisc<price) ? ownDisc : price;
+  let displayPrice = basePrice;
+  if (isSitewideSaleActive()) {
+    const pct = Number(_sitewideSale.percent)||0;
+    displayPrice = Math.max(0, Math.round(basePrice * (1 - pct/100)));
+  }
+  const hasDisc = displayPrice < price;
+  const discPct = hasDisc ? Math.round((1-displayPrice/price)*100) : 0;
+  return { price, displayPrice, hasDisc, discPct };
+}
+
+function renderSitewideSaleBanner() {
+  const banner = document.getElementById('sitewide-sale-banner');
+  if (!banner) return;
+  if (_sitewideSaleCountdownInterval) { clearInterval(_sitewideSaleCountdownInterval); _sitewideSaleCountdownInterval = null; }
+  if (!isSitewideSaleActive()) { banner.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  const label = _sitewideSale.label || `🔥 SALE! ${_sitewideSale.percent}% OFF Everything`;
+  document.getElementById('sitewide-sale-text').textContent = label;
+  const endMs = new Date(_sitewideSale.endAt).getTime();
+  const tick = () => {
+    const remain = endMs - Date.now();
+    const el = document.getElementById('sitewide-sale-countdown');
+    if (!el) return;
+    if (remain <= 0) {
+      clearInterval(_sitewideSaleCountdownInterval);
+      renderSitewideSaleBanner();
+      renderHome();
+      return;
+    }
+    const h = Math.floor(remain/3600000);
+    const m = Math.floor((remain%3600000)/60000);
+    const s = Math.floor((remain%60000)/1000);
+    el.textContent = `Ends in ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  };
+  tick();
+  _sitewideSaleCountdownInterval = setInterval(tick, 1000);
+}
+
+window.startSitewideSale = async function() {
+  if (!isAdmin) return showToast('You are not signed in as an admin account','error');
+  const percent = Number(document.getElementById('sale-percent').value);
+  const hours = Number(document.getElementById('sale-duration').value);
+  const label = document.getElementById('sale-label').value.trim();
+  if (!percent || percent <= 0 || percent >= 100) return showToast('Enter a valid discount percentage (1-99)','error');
+  if (!hours || hours <= 0) return showToast('Enter how many hours the sale should run','error');
+  try {
+    const startAt = new Date().toISOString();
+    const endAt = new Date(Date.now() + hours*3600000).toISOString();
+    await setDoc(doc(db,'settings','sitewide_sale'), { active:true, percent, startAt, endAt, label });
+    showToast(`Sale started! ${percent}% off everything for ${hours} hours 🔥`);
+  } catch(e) { showToast('Failed to start sale: '+friendlyError(e),'error'); }
+};
+
+window.endSitewideSaleNow = async function() {
+  if (!confirm('End the sitewide sale now? Prices will return to normal immediately.')) return;
+  try {
+    await updateDoc(doc(db,'settings','sitewide_sale'), { active:false });
+    showToast('Sale ended. Prices are back to normal.');
+  } catch(e) { showToast(friendlyError(e),'error'); }
+};
+
+function renderAdminSaleForm() {
+  const box = document.getElementById('sale-status-box');
+  if (!box) return;
+  if (isSitewideSaleActive()) {
+    box.style.display = 'block';
+    document.getElementById('sale-status-title').textContent = `🔥 Sale is LIVE — ${_sitewideSale.percent}% off everything`;
+    const end = new Date(_sitewideSale.endAt);
+    document.getElementById('sale-status-detail').textContent = 'Ends: ' + end.toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'});
+  } else {
+    box.style.display = 'none';
+  }
+}
+
 const PRODUCTS_CACHE_KEY = 'maywill-products-cache';
 let _productsUnsub = null;
 
@@ -4534,6 +4774,15 @@ function renderHome() {
   }
   const flashProducts = allProducts.filter(p=>p.isFlash);
   const nonFlash = [...allProducts].sort(()=>Math.random()-.5);
+  const newArrivals = allProducts.filter(p=>p.isNewArrival)
+    .sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
+  const naSection = document.getElementById('newarrivals-section');
+  if (newArrivals.length) {
+    naSection.classList.remove('hidden');
+    renderProductGrid('newarrivals-grid', newArrivals);
+  } else {
+    naSection.classList.add('hidden');
+  }
   renderProductGrid('flash-grid', flashProducts.length ? flashProducts : nonFlash.slice(0,3), true);
   renderProductGrid('featured-grid', nonFlash.slice(0,6));
   renderProductGrid('trending-grid', nonFlash.slice(0,9));
@@ -4638,11 +4887,7 @@ function renderProductGrid(gridId, products, isFlash=false) {
 }
 
 function productCardHTML(p, isFlash=false) {
-  const price = Number(p.price)||0;
-  const disc = Number(p.discountPrice)||0;
-  const displayPrice = disc>0 ? disc : price;
-  const hasDisc = disc>0 && disc<price;
-  const discPct = hasDisc ? Math.round((1-disc/price)*100) : 0;
+  const { price, displayPrice, hasDisc, discPct } = getEffectivePrice(p);
   const img = (p.images&&p.images[0]) ? p.images[0] : 'https://placehold.co/300x300/f0f0f0/aaaaaa?text=No+Image';
   const soldCount = p.soldCount || Math.floor(Math.random()*150+20);
   const stock = p.stock||50;
@@ -4683,11 +4928,7 @@ window.openProduct = function(id) {
   localStorage.setItem('recentlyViewed', JSON.stringify(rv));
 
   document.getElementById('detail-name').textContent = p.name||'';
-  const price = Number(p.price)||0;
-  const disc = Number(p.discountPrice)||0;
-  const displayPrice = disc>0 ? disc : price;
-  const hasDisc = disc>0 && disc<price;
-  const discPct = hasDisc ? Math.round((1-disc/price)*100) : 0;
+  const { price, displayPrice, hasDisc, discPct } = getEffectivePrice(p);
   document.getElementById('detail-price').innerHTML = '₦'+displayPrice.toLocaleString();
   document.getElementById('detail-old-price').innerHTML = hasDisc ? '₦'+price.toLocaleString() : '';
   document.getElementById('detail-discount').textContent = hasDisc ? `-${discPct}%` : '';
@@ -4834,7 +5075,7 @@ window.quickAddToCart = function(productId) {
   if(existing) {
     existing.qty = Math.min(existing.qty+1, p.stock||99);
   } else {
-    const price = Number(p.discountPrice)>0 ? Number(p.discountPrice) : Number(p.price);
+    const price = getEffectivePrice(p).displayPrice;
     cart.push({ productId, name: p.name, price, image: (p.images&&p.images[0])||'', qty: 1 });
   }
   saveCart();
@@ -4846,7 +5087,7 @@ window.cardBuyNow = function(productId) {
   if(!currentUser) { showToast('Please sign in to buy','info'); navigate('login'); return; }
   const p = allProducts.find(x=>x.id===productId);
   if(!p) return;
-  const price = Number(p.discountPrice)>0 ? Number(p.discountPrice) : Number(p.price);
+  const price = getEffectivePrice(p).displayPrice;
   const variantKey = p.id;
   const existing = cart.find(x=>x.variantKey===variantKey);
   if(existing) { existing.qty = Math.min(existing.qty+1, p.stock||99); }
@@ -4868,7 +5109,7 @@ window.addToCartFromDetail = function() {
     showToast('Please select a colour','error'); return;
   }
   const qty = parseInt(document.getElementById('qty-input').value)||1;
-  const price = Number(p.discountPrice)>0 ? Number(p.discountPrice) : Number(p.price);
+  const price = getEffectivePrice(p).displayPrice;
   const size = window._selectedSize||'';
   const colour = window._selectedColour||'';
   // Cart key includes size+colour so each variant is separate
@@ -6677,6 +6918,7 @@ window.showAddProductModal = function() {
   document.getElementById('edit-product-id').value = '';
   ['p-name','p-price','p-discount','p-stock','p-desc','p-sizes','p-colours'].forEach(id=>{ document.getElementById(id).value=''; });
   document.getElementById('p-flash').checked = false;
+  document.getElementById('p-newarrival').checked = false;
   _productImageUrls = [];
   document.getElementById('p-images-file').value = '';
   renderProductImagePreviews();
@@ -6700,6 +6942,7 @@ window.editProduct = function(id) {
   document.getElementById('p-sizes').value = (p.sizes||[]).join(', ');
   document.getElementById('p-colours').value = (p.colours||[]).join(', ');
   document.getElementById('p-flash').checked = !!p.isFlash;
+  document.getElementById('p-newarrival').checked = !!p.isNewArrival;
   openModal('modal-product');
 };
 
@@ -6720,9 +6963,10 @@ window.saveProduct = async function() {
   const coloursRaw = document.getElementById('p-colours').value.trim();
   const colours = coloursRaw ? coloursRaw.split(',').map(x=>x.trim()).filter(Boolean) : [];
   const isFlash = document.getElementById('p-flash').checked;
+  const isNewArrival = document.getElementById('p-newarrival').checked;
   if(!name||!price) return showToast('Name and price are required','error');
   try {
-    const data = { name, price, discountPrice, category, stock, description, images, sizes, colours, isFlash, updatedAt: serverTimestamp() };
+    const data = { name, price, discountPrice, category, stock, description, images, sizes, colours, isFlash, isNewArrival, updatedAt: serverTimestamp() };
     if(editId) {
       await updateDoc(doc(db,'products',editId), data);
       showToast('Product updated!');
@@ -7181,6 +7425,8 @@ window.switchAdminTab = function(tab, btn) {
   if(tabEl) tabEl.classList.remove('hidden');
   if(btn) btn.classList.add('active');
   if(tab==='products') loadAdminProducts();
+  else if(tab==='sale') renderAdminSaleForm();
+  else if(tab==='categories') renderAdminCategoriesList();
   else if(tab==='preorders') loadAdminPreorders();
   else if(tab==='orders') loadAdminOrders();
   else if(tab==='users') loadAdminUsers();
@@ -7276,7 +7522,7 @@ let supportListener = null;
 function buildProductContext() {
   if (!allProducts.length) return 'No products currently loaded.';
   return allProducts.map(p => {
-    const price = Number(p.discountPrice) > 0 ? Number(p.discountPrice) : Number(p.price);
+    const price = getEffectivePrice(p).displayPrice;
     return `• ${p.name} | Cat: ${p.category} | ₦${price.toLocaleString()} | Stock: ${p.stock > 0 ? p.stock : 'Out of stock'}${p.sizes?.length ? ' | Sizes: '+p.sizes.join(', ') : ''}${p.colours?.length ? ' | Colours: '+p.colours.join(', ') : ''}`;
   }).join('\n');
 }
@@ -7296,7 +7542,7 @@ function smartLocalReply(text) {
   if (/^(hi|hello|hey|good morning|good evening|sup)\b/.test(t)) return "Hello! 👋 Welcome to Maywill! I'm your support assistant. Ask me about products, prices, delivery, checkout, or orders!";
   const found = allProducts.filter(p => (p.name||'').toLowerCase().split(' ').some(w => w.length > 3 && t.includes(w)));
   if (found.length) {
-    const p = found[0]; const price = Number(p.discountPrice) > 0 ? Number(p.discountPrice) : Number(p.price);
+    const p = found[0]; const price = getEffectivePrice(p).displayPrice;
     let r = `I found *${p.name}*!\n💰 ₦${price.toLocaleString()} | 📦 ${p.stock > 0 ? p.stock+' in stock' : 'Out of stock'}`;
     if (p.sizes?.length) r += `\n📏 Sizes: ${p.sizes.join(', ')}`;
     if (p.colours?.length) r += `\n🎨 Colours: ${p.colours.join(', ')}`;
