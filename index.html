@@ -3178,6 +3178,13 @@ let _categoriesUnsub = null;
 let _sitewideSale = { active:false, percent:0, startAt:null, endAt:null, label:'' };
 let _sitewideSaleUnsub = null;
 let _sitewideSaleCountdownInterval = null;
+let _accountDetails = {
+  bankName: 'Opay',
+  accountName: 'Maywill Global Ventures Limited',
+  accountNumber: '9124016770',
+  phone: '+2349124016770',
+  note: 'Please transfer exact amount and include your order ID as reference.'
+};
 
 // ===== LOGO =====
 // Use inline text/SVG logo — no external file needed for GitHub Pages
@@ -5251,7 +5258,13 @@ async function loadCheckout() {
         window._checkoutSelectedState = snap.docs[0].data().state || '';
       }
     }
-  } catch(e) { addrDiv.innerHTML = ''; }
+  } catch(e) {
+    console.error('loadCheckout addresses error:', e);
+    addrDiv.innerHTML = `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:12px;color:#ef4444">
+      <i class="fas fa-exclamation-triangle"></i> Couldn't load your saved addresses (${friendlyError(e)}).
+      <button onclick="loadCheckout()" style="display:block;margin-top:8px;background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Retry</button>
+    </div>`;
+  }
   // Render order summary — state-based shipping with free threshold
   const sumDiv = document.getElementById('checkout-items-summary');
   const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
