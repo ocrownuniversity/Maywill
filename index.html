@@ -1304,34 +1304,49 @@ body{padding-bottom:65px!important;background:var(--bg)!important}
     <div class="checkout-section">
       <div class="checkout-title"><i class="fas fa-truck"></i> Delivery Method</div>
       <div class="delivery-type-row">
-        <div class="delivery-type-btn active" id="dtype-home" onclick="setDeliveryType('home')">
-          <i class="fas fa-home"></i>
-          <span>Home Delivery</span>
-          <small>Delivered to your door</small>
-        </div>
         <div class="delivery-type-btn" id="dtype-pickup" onclick="setDeliveryType('pickup')">
           <i class="fas fa-store"></i>
-          <span>Pickup Station</span>
-          <small>Collect at a station near you</small>
+          <span>Pickup at Our Store</span>
+          <small>Free — collect at our shop</small>
+        </div>
+        <div class="delivery-type-btn active" id="dtype-delivery" onclick="setDeliveryType('delivery')">
+          <i class="fas fa-truck"></i>
+          <span>Delivery</span>
+          <small>To your state / location</small>
         </div>
       </div>
 
-      <!-- HOME DELIVERY section -->
-      <div id="delivery-home-section">
-        <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Your Saved Addresses</div>
-        <div id="saved-addresses"></div>
-        <button class="btn-secondary" onclick="showAddAddressModal()" style="margin-top:8px;width:100%"><i class="fas fa-plus"></i> Add New Address</button>
+      <!-- PICKUP: single free location — our shop address -->
+      <div id="delivery-pickup-section" style="display:none">
+        <div class="pickup-station-card selected" style="cursor:default">
+          <h4><i class="fas fa-store" style="color:var(--orange)"></i> Maywill Global Ventures Limited</h4>
+          <p>C315 Royal Plaza, Opposite Building Material Market, Check Point, Nyanya, FCT</p>
+          <span class="pickup-fee" style="color:var(--green)">FREE — No pickup charge</span>
+        </div>
       </div>
 
-      <!-- PICKUP STATION section -->
-      <div id="delivery-pickup-section" style="display:none">
-        <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Select Your State</div>
-        <select class="form-input pickup-state-select" id="pickup-state-select" onchange="renderPickupStations(this.value)">
-          <option value="">-- Choose your state --</option>
-        </select>
-        <div id="pickup-stations-list"></div>
-        <div id="pickup-none" style="display:none;text-align:center;padding:16px;color:var(--gray-400);font-size:13px">
-          <i class="fas fa-info-circle"></i> No pickup stations in this state yet.<br>Please use Home Delivery.
+      <!-- DELIVERY: state + location, no fee shown upfront -->
+      <div id="delivery-address-section">
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <select class="form-input" id="delivery-state-select" onchange="updateCheckoutDeliverySummary()">
+            <option value="">-- Choose your state --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Location / Area</label>
+          <input class="form-input" id="delivery-location-input" placeholder="e.g. Wuse 2, near Banex Plaza">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recipient Name</label>
+          <input class="form-input" id="delivery-name-input" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recipient Phone</label>
+          <input class="form-input" id="delivery-phone-input" type="tel" placeholder="e.g. 08012345678">
+        </div>
+        <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:10px;padding:12px;font-size:12px;color:#c2410c;font-weight:700">
+          <i class="fas fa-info-circle"></i> Delivery fee is not fixed and depends on your location. Our team will confirm the exact delivery cost with you after your order is placed.
         </div>
       </div>
     </div>
@@ -5234,49 +5249,28 @@ window.goToCheckout = function() {
 async function loadCheckout() {
   // Ensure bank account details are current before showing checkout
   applyAccountDetailsToDOM();
-  // Load addresses
-  const addrDiv = document.getElementById('saved-addresses');
-  addrDiv.innerHTML = '<p style="color:var(--gray-400);font-size:13px">Loading addresses...</p>';
-  try {
-    const snap = await getDocs(collection(db,`users/${currentUser.uid}/addresses`));
-    if(snap.empty) {
-      addrDiv.innerHTML = '<p style="color:var(--gray-400);font-size:13px">No saved addresses. Add one below.</p>';
-    } else {
-      addrDiv.innerHTML = snap.docs.map((d,i)=>{
-        const a = d.data();
-        const subT = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-        const sFee = getShippingFee(a.state||'', subT);
-        const feeLabel = sFee === 0 ? '<span style="color:var(--green)">FREE 🎉</span>' : '₦'+sFee.toLocaleString();
-        return `<div class="address-card${i===0?' selected':''}" onclick="selectAddr(this,'${d.id}')" data-addr-id="${d.id}">
-          <h4>${a.name} &mdash; ${a.phone}</h4>
-          <p>${a.street}, ${a.city}, ${a.state}</p>
-          <span style="font-size:11px;color:var(--orange);font-weight:700;margin-top:4px;display:block"><i class="fas fa-truck"></i> Shipping to ${a.state||'this address'}: ${feeLabel}</span>
-        </div>`;
-      }).join('');
-      if(snap.docs.length) {
-        selectedAddress = snap.docs[0].id;
-        window._checkoutSelectedState = snap.docs[0].data().state || '';
-      }
-    }
-  } catch(e) {
-    console.error('loadCheckout addresses error:', e);
-    addrDiv.innerHTML = `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:12px;color:#ef4444">
-      <i class="fas fa-exclamation-triangle"></i> Couldn't load your saved addresses (${friendlyError(e)}).
-      <button onclick="loadCheckout()" style="display:block;margin-top:8px;background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Retry</button>
-    </div>`;
-  }
-  // Render order summary — state-based shipping with free threshold
+
+  // Reset to default delivery type and populate the state dropdown
+  window._deliveryType = 'delivery';
+  document.getElementById('dtype-pickup').classList.remove('active');
+  document.getElementById('dtype-delivery').classList.add('active');
+  document.getElementById('delivery-pickup-section').style.display = 'none';
+  document.getElementById('delivery-address-section').style.display = 'block';
+  populateDeliveryStates();
+  // Pre-fill recipient name/phone as a convenience if we have them
+  const nameInput = document.getElementById('delivery-name-input');
+  if (nameInput && !nameInput.value) nameInput.value = currentUser.displayName || '';
+
+  // Render order summary — delivery fee is never charged/shown in-app; pickup is always free
   const sumDiv = document.getElementById('checkout-items-summary');
   const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-  const deliveryFee = getShippingFee(window._checkoutSelectedState || '', subtotal);
-  const grandTotal = subtotal + deliveryFee;
-  const isFree = deliveryFee === 0;
   sumDiv.innerHTML = cart.map(x=>`<div class="summary-row"><span>${x.name} × ${x.qty}</span><span>₦${(x.price*x.qty).toLocaleString()}</span></div>`).join('') +
-    `<div class="summary-row"><span>Shipping Fee <span id="checkout-state-label" style="font-size:11px;color:var(--gray-400)">${window._checkoutSelectedState ? '('+window._checkoutSelectedState+')' : ''}</span></span><span id="checkout-delivery-val" style="color:${isFree?'var(--green)':'inherit'};font-weight:${isFree?'800':'400'}">${isFree?'FREE 🎉':'₦'+deliveryFee.toLocaleString()}</span></div>` +
-    `<div id="checkout-delivery-note" style="font-size:11px;color:var(--gray-400);margin-top:-6px;margin-bottom:4px"><i class="fas fa-map-marker-alt"></i> ${isFree ? 'Free shipping — order above ₦150,000 ✅' : 'Based on delivery state · Free above ₦150,000'}</div>`;
-  document.getElementById('checkout-total').innerHTML = '₦'+grandTotal.toLocaleString();
-  window._checkoutDeliveryFee = deliveryFee;
-  window._checkoutGrandTotal = grandTotal;
+    `<div class="summary-row"><span>Delivery <span id="checkout-state-label" style="font-size:11px;color:var(--gray-400)"></span></span><span id="checkout-delivery-val" style="color:var(--gray-500);font-weight:600">To be confirmed</span></div>` +
+    `<div id="checkout-delivery-note" style="font-size:11px;color:var(--gray-400);margin-top:-6px;margin-bottom:4px"><i class="fas fa-map-marker-alt"></i> Choose pickup for free collection, or delivery — our team will confirm the delivery cost with you.</div>`;
+  document.getElementById('checkout-total').innerHTML = '₦'+subtotal.toLocaleString();
+  window._checkoutDeliveryFee = 0;
+  window._checkoutGrandTotal = subtotal;
+  window._checkoutSelectedState = '';
   // Load loyalty points and reset coupon
   appliedCoupon = null; useLoyaltyDiscount = 0;
   const couponMsg = document.getElementById('coupon-msg'); if(couponMsg) couponMsg.style.display='none';
@@ -5339,112 +5333,18 @@ window.selectPayment = function(type) {
 };
 
 
-// ===== PICKUP STATIONS DATA =====
-const PICKUP_STATIONS = {
-  'Oyo': [
-    { id: 'oyo1', name: 'Maywill Pickup — Alakia', address: 'Alakia, Ibadan, Oyo State', area: 'Alakia, Ibadan', fee: 500 },
-    { id: 'oyo2', name: 'Maywill Pickup — Ojoo', address: 'Ojoo Market Area, Ibadan, Oyo State', area: 'Ojoo, Ibadan', fee: 500 },
-    { id: 'oyo3', name: 'Maywill Pickup — Challenge', address: 'Challenge Roundabout, Ibadan, Oyo State', area: 'Challenge, Ibadan', fee: 500 },
-  ],
-  'Lagos': [
-    { id: 'lag1', name: 'Maywill Pickup — Ikeja', address: 'Computer Village Area, Ikeja, Lagos', area: 'Ikeja', fee: 500 },
-    { id: 'lag2', name: 'Maywill Pickup — Surulere', address: 'Adeniran Ogunsanya, Surulere, Lagos', area: 'Surulere', fee: 500 },
-    { id: 'lag3', name: 'Maywill Pickup — Oshodi', address: 'Oshodi Market, Oshodi, Lagos', area: 'Oshodi', fee: 500 },
-    { id: 'lag4', name: 'Maywill Pickup — Lekki', address: 'Lekki Phase 1, Lekki, Lagos', area: 'Lekki', fee: 500 },
-  ],
-  'Abuja': [
-    { id: 'abj1', name: 'Maywill Pickup — Wuse II', address: 'Wuse II, Abuja FCT', area: 'Wuse II', fee: 500 },
-    { id: 'abj2', name: 'Maywill Pickup — Garki', address: 'Area 11, Garki, Abuja FCT', area: 'Garki', fee: 500 },
-    { id: 'abj3', name: 'Maywill Pickup — Kubwa', address: 'Kubwa Main Market, Kubwa, Abuja FCT', area: 'Kubwa', fee: 500 },
-  ],
-  'FCT': [
-    { id: 'fct1', name: 'Maywill Pickup — Wuse II', address: 'Wuse II, Abuja FCT', area: 'Wuse II', fee: 500 },
-    { id: 'fct2', name: 'Maywill Pickup — Garki', address: 'Area 11, Garki, Abuja FCT', area: 'Garki', fee: 500 },
-  ],
-  'Rivers': [
-    { id: 'riv1', name: 'Maywill Pickup — Mile 1', address: 'Mile 1 Diobu, Port Harcourt, Rivers State', area: 'Mile 1, PH', fee: 500 },
-    { id: 'riv2', name: 'Maywill Pickup — Rumuola', address: 'Rumuola Road, Port Harcourt, Rivers State', area: 'Rumuola, PH', fee: 500 },
-    { id: 'riv3', name: 'Maywill Pickup — Trans-Amadi', address: 'Trans-Amadi Industrial Layout, Port Harcourt', area: 'Trans-Amadi, PH', fee: 500 },
-  ],
-  'Kano': [
-    { id: 'kan1', name: 'Maywill Pickup — Kano City', address: 'Sabon Gari Market Area, Kano', area: 'Sabon Gari, Kano', fee: 500 },
-    { id: 'kan2', name: 'Maywill Pickup — Bompai', address: 'Bompai Road, Nassarawa GRA, Kano', area: 'Bompai, Kano', fee: 500 },
-  ],
-  'Anambra': [
-    { id: 'ana1', name: 'Maywill Pickup — Onitsha', address: 'Onitsha Main Market Area, Onitsha, Anambra', area: 'Onitsha', fee: 500 },
-    { id: 'ana2', name: 'Maywill Pickup — Awka', address: 'Awka Town, Awka, Anambra State', area: 'Awka', fee: 500 },
-  ],
-  'Enugu': [
-    { id: 'enu1', name: 'Maywill Pickup — Ogbete', address: 'Ogbete Main Market, Enugu', area: 'Ogbete, Enugu', fee: 500 },
-    { id: 'enu2', name: 'Maywill Pickup — Independence Layout', address: 'Independence Layout, Enugu', area: 'Independence Layout', fee: 500 },
-  ],
-  'Delta': [
-    { id: 'del1', name: 'Maywill Pickup — Warri', address: 'PTI Road, Effurun, Warri, Delta State', area: 'Warri', fee: 500 },
-    { id: 'del2', name: 'Maywill Pickup — Asaba', address: 'Cable Point, Asaba, Delta State', area: 'Asaba', fee: 500 },
-  ],
-  'Edo': [
-    { id: 'edo1', name: 'Maywill Pickup — Uselu', address: 'Uselu Market, Benin City, Edo State', area: 'Uselu, Benin City', fee: 500 },
-    { id: 'edo2', name: 'Maywill Pickup — Ring Road', address: 'Ring Road, Benin City, Edo State', area: 'Ring Road, Benin City', fee: 500 },
-  ],
-  'Osun': [
-    { id: 'osu1', name: 'Maywill Pickup — Osogbo', address: 'Oja Oba Market Area, Osogbo, Osun State', area: 'Osogbo', fee: 400 },
-    { id: 'osu2', name: 'Maywill Pickup — Ile-Ife', address: 'Mayfair Area, Ile-Ife, Osun State', area: 'Ile-Ife', fee: 400 },
-  ],
-  'Ekiti': [
-    { id: 'eki1', name: 'Maywill Pickup — Ado-Ekiti', address: 'Fajuyi Road, Ado-Ekiti, Ekiti State', area: 'Ado-Ekiti', fee: 500 },
-  ],
-  'Ondo': [
-    { id: 'ond1', name: 'Maywill Pickup — Akure', address: 'Oba-Ile Road, Akure, Ondo State', area: 'Akure', fee: 500 },
-    { id: 'ond2', name: 'Maywill Pickup — Ondo Town', address: 'Old Garage, Ondo Town, Ondo State', area: 'Ondo Town', fee: 500 },
-  ],
-  'Ogun': [
-    { id: 'ogu1', name: 'Maywill Pickup — Abeokuta', address: 'Kuto Market, Abeokuta, Ogun State', area: 'Abeokuta', fee: 500 },
-    { id: 'ogu2', name: 'Maywill Pickup — Sagamu', address: 'Sagamu Interchange, Sagamu, Ogun State', area: 'Sagamu', fee: 500 },
-  ],
-  'Kwara': [
-    { id: 'kwa1', name: 'Maywill Pickup — Ilorin', address: 'Challenge Area, Ilorin, Kwara State', area: 'Challenge, Ilorin', fee: 500 },
-    { id: 'kwa2', name: 'Maywill Pickup — Tanke', address: 'Tanke Road, Ilorin, Kwara State', area: 'Tanke, Ilorin', fee: 500 },
-  ],
-  'Kaduna': [
-    { id: 'kad1', name: 'Maywill Pickup — Kaduna Central', address: 'Kasuwan Barci, Kaduna', area: 'Central Kaduna', fee: 500 },
-    { id: 'kad2', name: 'Maywill Pickup — Barnawa', address: 'Barnawa, Kaduna South, Kaduna', area: 'Barnawa', fee: 500 },
-  ],
-  'Imo': [
-    { id: 'imo1', name: 'Maywill Pickup — Owerri', address: 'Relief Market Area, Owerri, Imo State', area: 'Owerri', fee: 500 },
-  ],
-  'Abia': [
-    { id: 'abi1', name: 'Maywill Pickup — Aba', address: 'Ariaria Market, Aba, Abia State', area: 'Ariaria, Aba', fee: 500 },
-    { id: 'abi2', name: 'Maywill Pickup — Umuahia', address: 'Umuahia Main Market, Umuahia, Abia State', area: 'Umuahia', fee: 500 },
-  ],
-  'Plateau': [
-    { id: 'pla1', name: 'Maywill Pickup — Jos', address: 'Terminus Market, Jos, Plateau State', area: 'Terminus, Jos', fee: 500 },
-    { id: 'pla2', name: 'Maywill Pickup — Bukuru', address: 'Bukuru, Jos South, Plateau State', area: 'Bukuru', fee: 500 },
-  ],
-  'Benue': [
-    { id: 'ben1', name: 'Maywill Pickup — Makurdi', address: 'Modern Market, Makurdi, Benue State', area: 'Makurdi', fee: 500 },
-  ],
-  'Kogi': [
-    { id: 'kog1', name: 'Maywill Pickup — Lokoja', address: 'Ganaja Market Area, Lokoja, Kogi State', area: 'Lokoja', fee: 500 },
-  ],
-  'Niger': [
-    { id: 'nig1', name: 'Maywill Pickup — Minna', address: 'Kpakungu Area, Minna, Niger State', area: 'Minna', fee: 500 },
-  ],
-  'Bayelsa': [
-    { id: 'bay1', name: 'Maywill Pickup — Yenagoa', address: 'Swali Market, Yenagoa, Bayelsa State', area: 'Yenagoa', fee: 500 },
-  ],
-  'Akwa Ibom': [
-    { id: 'akw1', name: 'Maywill Pickup — Uyo', address: 'Itam Market, Uyo, Akwa Ibom State', area: 'Uyo', fee: 500 },
-  ],
-  'Cross River': [
-    { id: 'cro1', name: 'Maywill Pickup — Calabar', address: 'Watt Market, Calabar, Cross River State', area: 'Calabar', fee: 500 },
-  ],
+// ===== PICKUP: single free location (our shop) =====
+const SHOP_PICKUP_INFO = {
+  name: 'Maywill Global Ventures Limited',
+  address: 'C315 Royal Plaza, Opposite Building Material Market, Check Point, Nyanya, FCT',
+  fee: 0
 };
 
-// Populate pickup state dropdown
-function initPickupStates() {
-  const sel = document.getElementById('pickup-state-select');
-  if (!sel) return;
-  const states = Object.keys(PICKUP_STATIONS).sort();
+// Populate the "Delivery" state dropdown (state names only — no fee shown, per admin's request)
+function populateDeliveryStates() {
+  const sel = document.getElementById('delivery-state-select');
+  if (!sel || sel.options.length > 1) return; // already populated
+  const states = Object.keys(STATE_SHIPPING_FEES).sort();
   states.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s;
@@ -5453,101 +5353,52 @@ function initPickupStates() {
   });
 }
 
-window.renderPickupStations = function(state) {
-  const listEl = document.getElementById('pickup-stations-list');
-  const noneEl = document.getElementById('pickup-none');
-  const stations = PICKUP_STATIONS[state] || [];
-  window._selectedPickupStation = null;
-  if (!state || !stations.length) {
-    listEl.innerHTML = '';
-    if (noneEl) noneEl.style.display = state ? 'block' : 'none';
-    return;
-  }
-  if (noneEl) noneEl.style.display = 'none';
-  listEl.innerHTML = stations.map(s => `
-    <div class="pickup-station-card" id="pcard-${s.id}" onclick="selectPickupStation('${s.id}')">
-      <h4><i class="fas fa-store" style="color:var(--orange);margin-right:6px"></i>${s.name}</h4>
-      <p>${s.address}</p>
-      <span class="pickup-fee"><i class="fas fa-tag"></i> Pickup Fee: ₦${s.fee.toLocaleString()} <span style="color:var(--gray-400);font-weight:400">(much cheaper than home delivery!)</span></span>
-    </div>
-  `).join('');
-  // Auto-select first station
-  selectPickupStation(stations[0].id);
-  // Update order summary fee
-  _updateCheckoutSummaryForPickup(stations[0].fee);
-};
-
-window.selectPickupStation = function(id) {
-  document.querySelectorAll('.pickup-station-card').forEach(c => c.classList.remove('selected'));
-  const card = document.getElementById('pcard-' + id);
-  if (card) card.classList.add('selected');
-  // Find the station data
-  let found = null;
-  for (const stations of Object.values(PICKUP_STATIONS)) {
-    found = stations.find(s => s.id === id);
-    if (found) break;
-  }
-  window._selectedPickupStation = found;
-  if (found) _updateCheckoutSummaryForPickup(found.fee);
-};
-
-function _updateCheckoutSummaryForPickup(fee) {
-  const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-  const total = subtotal + fee;
-  window._checkoutDeliveryFee = fee;
-  window._checkoutGrandTotal = total;
-  const feeEl = document.getElementById('checkout-delivery-val');
-  const lblEl = document.getElementById('checkout-state-label');
-  const totEl = document.getElementById('checkout-total');
-  if (feeEl) feeEl.textContent = '₦' + fee.toLocaleString();
-  if (lblEl) lblEl.textContent = '(Pickup)';
-  if (totEl) totEl.innerHTML = '₦' + total.toLocaleString();
-}
-
 window._deliveryType = 'home'; // default
+
+window._deliveryType = 'delivery'; // default
 
 window.setDeliveryType = function(type) {
   window._deliveryType = type;
-  document.getElementById('dtype-home').classList.toggle('active', type === 'home');
   document.getElementById('dtype-pickup').classList.toggle('active', type === 'pickup');
-  document.getElementById('delivery-home-section').style.display = type === 'home' ? 'block' : 'none';
+  document.getElementById('dtype-delivery').classList.toggle('active', type === 'delivery');
   document.getElementById('delivery-pickup-section').style.display = type === 'pickup' ? 'block' : 'none';
+  document.getElementById('delivery-address-section').style.display = type === 'delivery' ? 'block' : 'none';
 
-  if (type === 'pickup') {
-    initPickupStates();
-    // Reset to home delivery fee calc until a station is picked
-    window._selectedPickupStation = null;
-    const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-    const stateEl = document.getElementById('pickup-state-select');
-    if (stateEl && stateEl.value) renderPickupStations(stateEl.value);
-    else {
-      window._checkoutDeliveryFee = 500;
-      const totEl = document.getElementById('checkout-total');
-      if (totEl) totEl.innerHTML = '₦' + (subtotal + 500).toLocaleString();
+  if (type === 'delivery') populateDeliveryStates();
+  updateCheckoutDeliverySummary();
+};
+
+window.updateCheckoutDeliverySummary = function() {
+  const type = window._deliveryType;
+  const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
+  window._checkoutDeliveryFee = 0; // never charged in-app — communicated separately for delivery, always free for pickup
+  window._checkoutGrandTotal = subtotal;
+  window._checkoutSelectedState = type === 'delivery' ? (document.getElementById('delivery-state-select')?.value || '') : '';
+
+  const feeEl = document.getElementById('checkout-delivery-val');
+  const lblEl = document.getElementById('checkout-state-label');
+  if (feeEl) {
+    if (type === 'pickup') {
+      feeEl.textContent = 'FREE 🎉';
+      feeEl.style.color = 'var(--green)'; feeEl.style.fontWeight = '800';
+    } else {
+      feeEl.textContent = 'To be confirmed';
+      feeEl.style.color = 'var(--gray-500)'; feeEl.style.fontWeight = '600';
     }
-  } else {
-    // Restore home delivery fee
-    const fee = getShippingFee(window._checkoutSelectedState || '');
-    const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-    window._checkoutDeliveryFee = fee;
-    window._checkoutGrandTotal = subtotal + fee;
-    const feeEl = document.getElementById('checkout-delivery-val');
-    const lblEl = document.getElementById('checkout-state-label');
-    const totEl = document.getElementById('checkout-total');
-    if (feeEl) feeEl.textContent = '₦' + fee.toLocaleString();
-    if (lblEl) lblEl.textContent = window._checkoutSelectedState ? '(' + window._checkoutSelectedState + ')' : '';
-    if (totEl) totEl.innerHTML = '₦' + (subtotal + fee).toLocaleString();
   }
+  if (lblEl) lblEl.textContent = type === 'pickup' ? '(Pickup at our store)' : (window._checkoutSelectedState ? '('+window._checkoutSelectedState+')' : '');
+  if (typeof updateCheckoutTotal === 'function') updateCheckoutTotal();
 };
 
 // ===== WHATSAPP ORDER NOTIFICATIONS =====
 // Notify admin (you) on WhatsApp when a new order comes in
-function notifyAdminWhatsApp(orderId, buyerName, buyerEmail, itemNames, subtotal, deliveryFee, payment, addrStr, buyerPhone, couponDiscount, couponCode, loyaltyDiscount) {
+function notifyAdminWhatsApp(orderId, buyerName, buyerEmail, itemNames, subtotal, deliveryFee, payment, addrStr, buyerPhone, couponDiscount, couponCode, loyaltyDiscount, deliveryType) {
   const paymentLabel = payment === 'bank' ? `🏦 Bank Transfer (${_accountDetails.bankName})`
     : payment === 'wallet' ? '💰 Wallet'
     : payment === 'paystack' ? '⚡ Paystack'
     : '💵 Pay on Delivery';
   const grandTotal = Math.max(0, subtotal - (couponDiscount||0) - (loyaltyDiscount||0) + (deliveryFee||0));
+  const deliveryLabel = deliveryType === 'pickup' ? '🏬 FREE — Pickup at store' : '🚚 To be arranged with customer';
   let msg = `🛍️ *New Order — Maywill!*\n\n`
     + `🆔 *Order ID:* ${orderId}\n`
     + `👤 *Customer:* ${buyerName}\n`
@@ -5559,14 +5410,14 @@ function notifyAdminWhatsApp(orderId, buyerName, buyerEmail, itemNames, subtotal
     + `💵 *Subtotal:* ₦${(subtotal||0).toLocaleString()}\n`
     + (couponDiscount>0 ? `🏷️ *Coupon (${couponCode}):* -₦${couponDiscount.toLocaleString()}\n` : '')
     + (loyaltyDiscount>0 ? `⭐ *Loyalty Discount:* -₦${loyaltyDiscount.toLocaleString()}\n` : '')
-    + `🚚 *Delivery Fee:* ₦${(deliveryFee||0).toLocaleString()}\n`
+    + `🚚 *Delivery:* ${deliveryLabel}\n`
     + `\n💰 *Grand Total:* ₦${grandTotal.toLocaleString()}\n\n`
     + `Go to Admin Panel to process this order.`;
   window.open('https://wa.me/'+ADMIN_WHATSAPP+'?text='+encodeURIComponent(msg), '_blank');
 }
 
 // Notify the buyer on WhatsApp about their order (placed or status-updated)
-function notifyBuyerWhatsApp(phone, orderId, status, itemNames, buyerName, total, deliveryFee) {
+function notifyBuyerWhatsApp(phone, orderId, status, itemNames, buyerName, total, deliveryFee, deliveryType) {
   if (!phone) return; // no phone on file — skip silently
   const cleanPhone = phone.replace(/[^0-9]/g,'');
   const waNum = cleanPhone.startsWith('0') ? '234'+cleanPhone.slice(1) : cleanPhone;
@@ -5579,6 +5430,7 @@ function notifyBuyerWhatsApp(phone, orderId, status, itemNames, buyerName, total
     cancelled: '❌ Cancelled'
   };
   const statusLabel = statusLabels[status] || status;
+  const deliveryLabel = deliveryType === 'pickup' ? 'FREE — Pickup at our store' : 'Our team will confirm the delivery cost with you';
   let msg;
   if (status === 'pending') {
     msg = `🛍️ *Order Confirmation — Maywill!*\n\n`
@@ -5587,7 +5439,7 @@ function notifyBuyerWhatsApp(phone, orderId, status, itemNames, buyerName, total
       + `🆔 *Order ID:* ${orderId}\n`
       + `📦 *Items:* ${itemNames}\n`
       + `💰 *Total:* ₦${(total||0).toLocaleString()}\n`
-      + `🚚 *Delivery Fee:* ₦${(deliveryFee||0).toLocaleString()}\n\n`
+      + `🚚 *Delivery:* ${deliveryLabel}\n\n`
       + `Status: ${statusLabel}\n\n`
       + `We'll keep you updated as your order progresses. Thank you for shopping with Maywill! 💜`;
   } else {
@@ -5602,16 +5454,33 @@ function notifyBuyerWhatsApp(phone, orderId, status, itemNames, buyerName, total
   window.open('https://wa.me/'+waNum+'?text='+encodeURIComponent(msg), '_blank');
 }
 
+function buildCheckoutAddress() {
+  const dType = window._deliveryType || 'delivery';
+  if (dType === 'pickup') {
+    return {
+      name: (currentUser.displayName || currentUser.email.split('@')[0]),
+      phone: '', street: SHOP_PICKUP_INFO.address, city: '', state: '',
+      pickupStation: SHOP_PICKUP_INFO.name, isPickup: true
+    };
+  }
+  return {
+    name: document.getElementById('delivery-name-input')?.value.trim() || (currentUser.displayName || currentUser.email.split('@')[0]),
+    phone: document.getElementById('delivery-phone-input')?.value.trim() || '',
+    street: document.getElementById('delivery-location-input')?.value.trim() || '',
+    city: '', state: document.getElementById('delivery-state-select')?.value || '',
+    isPickup: false
+  };
+}
+
 window.placeOrder = async function() {
   if(!currentUser) { navigate('login'); return; }
   // Validate delivery method selection
-  const dType = window._deliveryType || 'home';
-  if (dType === 'home') {
-    if(!selectedAddress) return showToast('Please select a delivery address','error');
-  } else {
-    if(!window._selectedPickupStation) return showToast('Please select a pickup station','error');
-    const pickupStateEl = document.getElementById('pickup-state-select');
-    if(!pickupStateEl || !pickupStateEl.value) return showToast('Please select your state for pickup','error');
+  const dType = window._deliveryType || 'delivery';
+  if (dType === 'delivery') {
+    if(!document.getElementById('delivery-state-select')?.value) return showToast('Please select your state','error');
+    if(!document.getElementById('delivery-location-input')?.value.trim()) return showToast('Please enter your delivery location/area','error');
+    if(!document.getElementById('delivery-name-input')?.value.trim()) return showToast('Please enter the recipient\'s name','error');
+    if(!document.getElementById('delivery-phone-input')?.value.trim()) return showToast('Please enter the recipient\'s phone number','error');
   }
   if(!selectedPayment) return showToast('Please select a payment method','error');
   if(!cart.length) return showToast('Your cart is empty','error');
@@ -5634,25 +5503,9 @@ window.placeOrder = async function() {
   }
 
   try {
-    // Build address object depending on delivery type
-    let addr = {};
-    if (dType === 'pickup' && window._selectedPickupStation) {
-      const ps = window._selectedPickupStation;
-      addr = {
-        name: (currentUser.displayName || currentUser.email.split('@')[0]),
-        phone: '',
-        street: ps.address,
-        city: ps.area,
-        state: document.getElementById('pickup-state-select')?.value || '',
-        pickupStation: ps.name,
-        isPickup: true
-      };
-    } else {
-      const addrSnap = await getDoc(doc(db,`users/${currentUser.uid}/addresses`,selectedAddress));
-      addr = addrSnap.exists() ? addrSnap.data() : {};
-    }
+    const addr = buildCheckoutAddress();
     const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-    const deliveryFee = window._checkoutDeliveryFee !== undefined ? window._checkoutDeliveryFee : 3500;
+    const deliveryFee = 0; // never charged in-app — communicated separately when applicable
     const couponDiscount = window._checkoutCouponDiscount || 0;
     const loyaltyDiscount = useLoyaltyDiscount || 0;
     const grandTotal = Math.max(0, subtotal - couponDiscount - loyaltyDiscount + deliveryFee);
@@ -5662,7 +5515,7 @@ window.placeOrder = async function() {
       orderId, userId: currentUser.uid, userEmail: currentUser.email,
       items: itemsCopy, address: addr, payment: selectedPayment,
       deliveryType: dType,
-      pickupStation: dType === 'pickup' ? (window._selectedPickupStation?.name || '') : '',
+      pickupStation: dType === 'pickup' ? SHOP_PICKUP_INFO.name : '',
       subtotal, deliveryFee, couponCode: appliedCoupon?.code||'', couponDiscount, loyaltyDiscount,
       total: grandTotal, status: 'pending',
       createdAt: serverTimestamp(),
@@ -5684,7 +5537,7 @@ window.placeOrder = async function() {
 
     // Notify ADMIN immediately — must happen right after the click/await chain
     // with minimal delay, or mobile browsers will block the WhatsApp popup.
-    notifyAdminWhatsApp(orderId, addr.name||currentUser.email.split('@')[0], currentUser.email, itemNames, subtotal, deliveryFee, selectedPayment, addrStr, addr.phone||'', couponDiscount, appliedCoupon?.code||'', loyaltyDiscount);
+    notifyAdminWhatsApp(orderId, addr.name||currentUser.email.split('@')[0], currentUser.email, itemNames, subtotal, deliveryFee, selectedPayment, addrStr, addr.phone||'', couponDiscount, appliedCoupon?.code||'', loyaltyDiscount, dType);
 
     // ---- Debit wallet if paying with wallet (after notifying admin) ----
     if (selectedPayment === 'wallet') {
@@ -5718,7 +5571,7 @@ window.placeOrder = async function() {
       } catch(e) { console.warn('Stock update failed for', pid, e); }
     }
     setTimeout(()=>{
-      notifyBuyerWhatsApp(addr.phone||'', orderId, 'pending', itemNames, addr.name||currentUser.email.split('@')[0], grandTotal, deliveryFee);
+      notifyBuyerWhatsApp(addr.phone||'', orderId, 'pending', itemNames, addr.name||currentUser.email.split('@')[0], grandTotal, deliveryFee, dType);
     }, 2000);
     showReceipt(orderId, orderData);
     navigate('success');
@@ -5763,18 +5616,11 @@ async function placeOrderAfterPaystack(paystackRef) {
   const savedPayment = selectedPayment;
   selectedPayment = 'paystack';
   // Temporarily mark it done then place
-  const dType = window._deliveryType || 'home';
+  const dType = window._deliveryType || 'delivery';
   try {
-    let addr = {};
-    if (dType === 'pickup' && window._selectedPickupStation) {
-      const ps = window._selectedPickupStation;
-      addr = { name: (currentUser.displayName || currentUser.email.split('@')[0]), phone:'', street: ps.address, city: ps.area, state: document.getElementById('pickup-state-select')?.value||'', pickupStation: ps.name, isPickup: true };
-    } else {
-      const addrSnap = await getDoc(doc(db,`users/${currentUser.uid}/addresses`,selectedAddress));
-      addr = addrSnap.exists() ? addrSnap.data() : {};
-    }
+    const addr = buildCheckoutAddress();
     const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-    const deliveryFee = window._checkoutDeliveryFee !== undefined ? window._checkoutDeliveryFee : 3500;
+    const deliveryFee = 0;
     const couponDiscount = window._checkoutCouponDiscount || 0;
     const loyaltyDiscount = useLoyaltyDiscount || 0;
     const grandTotal = Math.max(0, subtotal - couponDiscount - loyaltyDiscount + deliveryFee);
@@ -5784,7 +5630,7 @@ async function placeOrderAfterPaystack(paystackRef) {
       orderId, userId: currentUser.uid, userEmail: currentUser.email,
       items: itemsCopy, address: addr, payment: 'paystack',
       paystackRef, deliveryType: dType,
-      pickupStation: dType === 'pickup' ? (window._selectedPickupStation?.name || '') : '',
+      pickupStation: dType === 'pickup' ? SHOP_PICKUP_INFO.name : '',
       subtotal, deliveryFee, couponCode: appliedCoupon?.code||'', couponDiscount, loyaltyDiscount,
       total: grandTotal, status: 'pending', createdAt: serverTimestamp(),
       phone: addr.phone || '', buyerPhone: addr.phone || ''
@@ -5825,12 +5671,12 @@ function showReceipt(orderId, data) {
     <div class="summary-row"><span>Order ID</span><span style="font-weight:800">${orderId}</span></div>
     <div class="summary-row"><span>Date</span><span>${new Date().toLocaleDateString()}</span></div>
     <div class="summary-row"><span>Payment</span><span>${data.payment==='bank'?'Bank Transfer':'Pay on Delivery'}</span></div>
-    <div class="summary-row"><span>${data.deliveryType==='pickup'?'Pickup Station':'Delivery to'}</span><span>${data.deliveryType==='pickup'?(data.pickupStation||data.address?.street||''):((data.address&&data.address.street)||'')+', '+((data.address&&data.address.city)||'')}</span></div>
+    <div class="summary-row"><span>${data.deliveryType==='pickup'?'Pickup Station':'Delivery to'}</span><span>${data.deliveryType==='pickup'?(data.pickupStation||data.address?.street||''):[data.address?.street,data.address?.state].filter(Boolean).join(', ')}</span></div>
     <hr style="border:none;border-top:1px solid var(--gray-200);margin:10px 0">
     ${data.items.map(x=>'<div class="summary-row"><span>'+x.name+' × '+x.qty+'</span><span>₦'+(x.price*x.qty).toLocaleString()+'</span></div>').join('')}
     <hr style="border:none;border-top:1px solid var(--gray-200);margin:10px 0">
     <div class="summary-row"><span>Subtotal</span><span>₦${subtotal.toLocaleString()}</span></div>
-    <div class="summary-row"><span style="color:${deliveryFee===0?'var(--green)':'inherit'}">Delivery Fee</span><span style="color:${deliveryFee===0?'var(--green)':'var(--gray-800)'}">${deliveryFee===0?'FREE ✅':'₦'+deliveryFee.toLocaleString()}</span></div>
+    <div class="summary-row"><span style="color:${data.deliveryType==='pickup'?'var(--green)':'inherit'}">Delivery Fee</span><span style="color:${data.deliveryType==='pickup'?'var(--green)':'var(--gray-500)'}">${data.deliveryType==='pickup'?'FREE ✅':'To be confirmed'}</span></div>
     ${couponDiscount>0 ? '<div class="summary-row"><span style="color:var(--green)">🏷️ Coupon ('+(couponCode||'DISCOUNT')+')</span><span style="color:var(--green);font-weight:800">-₦'+couponDiscount.toLocaleString()+'</span></div>' : ''}
     ${loyaltyDiscount>0 ? '<div class="summary-row"><span style="color:var(--green)">⭐ Loyalty Points</span><span style="color:var(--green);font-weight:800">-₦'+loyaltyDiscount.toLocaleString()+'</span></div>' : ''}
     ${savings>0 ? '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:12px;color:var(--green);font-weight:700;text-align:center">🎉 You saved ₦'+savings.toLocaleString()+' on this order!</div>' : ''}
@@ -7213,7 +7059,7 @@ window.viewOrderDetails = async function(docId) {
         <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--gray-500);letter-spacing:.5px;margin-bottom:10px">💰 Payment Summary</div>
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--gray-500)">Payment Method</span><span style="font-weight:700">${o.payment==='bank'?'🏦 Bank Transfer ('+escHtml(_accountDetails.bankName)+')':'💵 Pay on Delivery'}</span></div>
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--gray-500)">Subtotal</span><span style="font-weight:700">₦${((o.total||0)-(o.deliveryFee||0)).toLocaleString()}</span></div>
-        ${(o.deliveryFee||0)>0 ? '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--gray-500)">Delivery Fee</span><span style="font-weight:700">₦'+(o.deliveryFee||0).toLocaleString()+'</span></div>' : ''}
+        ${o.deliveryType ? '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--gray-500)">Delivery</span><span style="font-weight:700">'+(o.deliveryType==='pickup'?'🏬 FREE — Pickup at store':'🚚 To be confirmed')+'</span></div>' : ''}
         <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:900;border-top:2px solid var(--gray-200);padding-top:10px;margin-top:4px"><span>Total</span><span style="color:var(--orange)">₦${(o.total||0).toLocaleString()}</span></div>
       </div>`;
 
@@ -7338,7 +7184,7 @@ window.updateOrderStatus = async function() {
     const itemNames = (o.items||[]).map(x=>`${x.name}${x.qty>1?' x'+x.qty:''}`).join(', ');
     // Open WhatsApp after short delay so toast shows first
     setTimeout(() => {
-      notifyBuyerWhatsApp(buyerPhone || '', o.orderId||id, status, itemNames, buyerName, o.total||0, o.deliveryFee||0);
+      notifyBuyerWhatsApp(buyerPhone || '', o.orderId||id, status, itemNames, buyerName, o.total||0, o.deliveryFee||0, o.deliveryType);
     }, 600);
   } catch(e) {
     console.error('updateOrderStatus error:', e);
@@ -8400,7 +8246,6 @@ async function awardLoyaltyPoints(orderId, total) {
 // ===== UPDATE CHECKOUT TOTAL (with coupon + loyalty) =====
 function updateCheckoutTotal() {
   const subtotal = cart.reduce((s,x)=>s+(x.price*x.qty),0);
-  const deliveryFee = window._checkoutDeliveryFee || getShippingFee(window._checkoutSelectedState||'', subtotal);
   let discount = 0;
   let couponRow = document.getElementById('coupon-discount-row');
   let couponVal = document.getElementById('coupon-discount-val');
@@ -8408,7 +8253,6 @@ function updateCheckoutTotal() {
   if(appliedCoupon) {
     if(appliedCoupon.type==='percent') discount = Math.floor(subtotal * appliedCoupon.value/100);
     else if(appliedCoupon.type==='fixed') discount = appliedCoupon.value;
-    else if(appliedCoupon.type==='shipping') { window._checkoutDeliveryFee = 0; }
     if(couponRow) { couponRow.style.display='flex'; couponVal.textContent='-₦'+discount.toLocaleString(); couponLbl.textContent='Coupon ('+appliedCoupon.code+')'; }
   } else {
     if(couponRow) couponRow.style.display='none';
@@ -8420,24 +8264,34 @@ function updateCheckoutTotal() {
   } else {
     if(loyaltyRow) loyaltyRow.style.display='none';
   }
-  const effDelivery = (appliedCoupon && appliedCoupon.type==='shipping') ? 0 : deliveryFee;
-  const total = Math.max(0, subtotal - discount - useLoyaltyDiscount + effDelivery);
+  window._checkoutDeliveryFee = 0; // delivery is never charged/added in-app
+  const total = Math.max(0, subtotal - discount - useLoyaltyDiscount);
   const totEl = document.getElementById('checkout-total');
   if(totEl) totEl.innerHTML = '₦'+total.toLocaleString();
   window._checkoutFinalTotal = total;
+  window._checkoutGrandTotal = total;
   window._checkoutCouponDiscount = discount;
-  // Estimated delivery date based on state
+  // Estimated timeline — differs for pickup vs delivery
   const estEl = document.getElementById('est-delivery-date');
   if(estEl) {
-    const state = (window._checkoutSelectedState||'').toLowerCase();
-    let days = 5; // default
-    if(state.includes('lagos')) days = 1;
-    else if(['abuja','fct','ogun','oyo','delta','rivers','edo','anambra','imo','enugu','kano','kaduna','kwara','osun','ondo','ekiti','benue'].some(s=>state.includes(s))) days = 2;
-    else if(state) days = 3;
-    const estDate = new Date(); estDate.setDate(estDate.getDate()+days);
-    const label = estDate.toLocaleDateString('en-NG',{weekday:'long',day:'numeric',month:'short'});
-    estEl.style.display='block';
-    estEl.querySelector('span').textContent = 'Estimated delivery: '+label+(days===1?' (Tomorrow)':' ('+days+' days)');
+    if (window._deliveryType === 'pickup') {
+      estEl.style.display = 'block';
+      estEl.querySelector('span').textContent = 'Ready for pickup once your order is confirmed';
+    } else {
+      const state = (window._checkoutSelectedState||'').toLowerCase();
+      if (!state) {
+        estEl.style.display = 'none';
+      } else {
+        let days = 5; // default
+        if(state.includes('lagos')) days = 1;
+        else if(['abuja','fct','ogun','oyo','delta','rivers','edo','anambra','imo','enugu','kano','kaduna','kwara','osun','ondo','ekiti','benue'].some(s=>state.includes(s))) days = 2;
+        else if(state) days = 3;
+        const estDate = new Date(); estDate.setDate(estDate.getDate()+days);
+        const label = estDate.toLocaleDateString('en-NG',{weekday:'long',day:'numeric',month:'short'});
+        estEl.style.display='block';
+        estEl.querySelector('span').textContent = 'Estimated delivery: around '+label+(days===1?' (Tomorrow)':' ('+days+' days)');
+      }
+    }
   }
 }
 
